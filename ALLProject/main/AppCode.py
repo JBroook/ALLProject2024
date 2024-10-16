@@ -1,5 +1,7 @@
 from tkinter import messagebox
 import sqlite3 as sql
+from tokenize import String
+
 import customtkinter as ctk
 from PIL import Image as img
 import re
@@ -20,7 +22,10 @@ class App:
         self.master._state_before_windows_set_titlebar_color = 'zoomed'
         self.width = self.master.winfo_screenwidth()
         self.height = self.master.winfo_screenheight()
-        print(self.width,self.height)
+        self.firstName = ctk.StringVar()
+        self.firstName.set("Default")
+        self.lastName = ctk.StringVar()
+        self.lastName.set("User")
         self.sqliteConnection = sql.connect("DriveEase.db")
         self.cursor = self.sqliteConnection.cursor()
         self.cursor.execute('''
@@ -41,8 +46,9 @@ class App:
             self.cursor.execute('''
             INSERT INTO USERS (USERNAME, EMAIL, USER_PASSWORD, FIRST_NAME, LAST_NAME, DATE_OF_BIRTH)
             VALUES (?, ?, ?, ?, ?, ?)
-            ''', ("Admin","jeremiahboey@gmail.com","Admin@1234","Admin","Guy","2000-01-01"))
+            ''', ("Admin","jeremiahboey@gmail.com","Admin@1234","Admin","Account","2000-01-01"))
 
+        self.sqliteConnection.commit()
         self.master.bind("<KeyRelease>", self.login_enter)
         self.login()
 
@@ -50,7 +56,7 @@ class App:
         for i in self.master.winfo_children():
             i.destroy()
         # bg image
-        login_ui = ctk.CTkImage(light_image=img.open("assets/login ui.png"), size=(1536, 800))
+        login_ui = ctk.CTkImage(light_image=img.open("assets/login ui.png"), size=(self.width, self.height-64))
         login_ui_label = ctk.CTkLabel(master=self.master, image=login_ui, text="")
         login_ui_label.place(relx=0, rely=0, anchor="nw")
 
@@ -203,6 +209,8 @@ class App:
         if len(result):
             user = result[0]
             if user[3] == self.password.get():
+                self.firstName.set(user[4])
+                self.lastName.set(user[5])
                 self.home_page()
             else:
                 messagebox.showerror("Error", "Password is wrong")
@@ -275,20 +283,46 @@ class App:
         for i in self.master.winfo_children():
             i.destroy()
 
-        homepage_bg = ctk.CTkImage(light_image=img.open("assets/homepage bg.png"), size=(1920, 800))
-        homepage_bg_label = ctk.CTkLabel(self.master,image=homepage_bg,text="")
-        homepage_bg_label.place(relx=0,rely=0,anchor="nw")
-        header_label = ctk.CTkLabel(self.master,text=f"Welcome, {self.username.get()}", font=("Inter",48),fg_color="#00ADB5",text_color="#222831")
-        header_label.place(relx=0.1,y=100,anchor="w")
+        homepage_ui = ctk.CTkImage(light_image=img.open("assets/home page ui.png"), size=(1536, 800))
+        homepage_ui_label = ctk.CTkLabel(self.master,image=homepage_ui,text="")
+        homepage_ui_label.place(relx=0,rely=0,anchor="nw")
 
-        rent_button = ctk.CTkButton(self.master,text="Rent a car",width=400,height=500,font=("Inter",36),bg_color="#EEEEEE",fg_color="#393E46",border_width=5, hover_color="#222831",command=self.rental_page)
-        rent_button.place(relx=0.2  ,y=500,anchor="center")
+        rent_button = ctk.CTkButton(
+            master=self.master,
+            text="Go",
+            width=158,
+            height=40,
+            font=("Poppins Medium",14),
+            bg_color="#FFFFFF",
+            fg_color="#1572D3",
+            text_color="white",
+            command=self.rental_page
+        )
+        rent_button.place(x=1210  ,y=204,anchor="nw")
 
-        manage_button = ctk.CTkButton(self.master, text="Manage my account", width=400, height=500,font=("Inter",36),bg_color="#EEEEEE",fg_color="#393E46",border_width=5, hover_color="#222831")
-        manage_button.place(relx=0.5, y=500, anchor="center")
+        account_button = ctk.CTkButton(
+            master=self.master,
+            text="Go",
+            width=158,
+            height=42,
+            font=("Poppins Medium", 14),
+            bg_color="#FFFFFF",
+            fg_color="#1572D3",
+            text_color="white"
+        )
+        account_button.place(x=1210, y=441, anchor="nw")
 
-        booking_button = ctk.CTkButton(self.master, text="My bookings", width=400, height=500,font=("Inter",36),bg_color="#EEEEEE",fg_color="#393E46",border_width=5, hover_color="#222831")
-        booking_button.place(relx=0.8, y=500, anchor="center")
+        book_button = ctk.CTkButton(
+            master=self.master,
+            text="Go",
+            width=158,
+            height=42,
+            font=("Poppins Medium", 14),
+            bg_color="#FFFFFF",
+            fg_color="#1572D3",
+            text_color="white"
+        )
+        book_button.place(x=1210, y=673, anchor="nw")
 
     def check_verification(self):
         if self.verification_code.get()==self.random_code:
