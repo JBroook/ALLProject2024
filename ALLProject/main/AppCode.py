@@ -65,15 +65,15 @@ class App:
         usernameEntry = ctk.CTkEntry(
             self.master,
             textvariable=self.username,
-            width=402,
-            height=54,
+            width=402/1536*self.width,
+            height=54/864*self.height,
             bg_color="white",
             fg_color="#D9D9D9",
             border_color="#D9D9D9",
             text_color="black",
             font=("Poppins Light",24)
         )
-        usernameEntry.place(x=186,y=375,anchor="nw")
+        usernameEntry.place(x=186/1536*self.width,y=375/864*self.height,anchor="nw")
 
         # # password stuff
         self.password = ctk.StringVar()
