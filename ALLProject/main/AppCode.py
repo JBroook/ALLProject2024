@@ -16,16 +16,28 @@ pyglet.font.add_file("assets/fonts/Poppins-Medium.ttf")
 
 class App:
     def __init__(self, master):
+        #app settings
         self.master = master
         self.master.title("Car Rental App")
         self.master.geometry("800x500")
         self.master._state_before_windows_set_titlebar_color = 'zoomed'
         self.width = self.master.winfo_screenwidth()
         self.height = self.master.winfo_screenheight()
+
+        # ui definitions
+        self.manu_year = ctk.IntVar()
         self.firstName = ctk.StringVar()
         self.firstName.set("Default")
         self.lastName = ctk.StringVar()
         self.lastName.set("User")
+        self.search_options = {
+            "capacity": 5,
+            "manufacturer year": 2000,
+            "transmission": "auto",
+            "price": 1
+        }
+
+        #database stuff
         self.sqliteConnection = sql.connect("DriveEase.db")
         self.cursor = self.sqliteConnection.cursor()
         self.cursor.execute('''
@@ -50,7 +62,7 @@ class App:
 
         self.sqliteConnection.commit()
         self.master.bind("<KeyRelease>", self.login_enter)
-        self.login()
+        self.rental_page()
 
     def login(self):
         for i in self.master.winfo_children():
@@ -345,6 +357,152 @@ class App:
         rental_ui = ctk.CTkImage(light_image=img.open("assets/car rental ui.png"), size=(self.width, self.height-64))
         rental_ui_label = ctk.CTkLabel(master=self.master, image=rental_ui, text="")
         rental_ui_label.place(x=0,y=0,anchor="nw")
+
+        #search option buttons
+        five_passenger = ctk.CTkButton(
+            self.master,
+            text="5 Passengers",
+            bg_color="white",
+            fg_color="#f0f4fc",
+            text_color="#1572D3",
+            border_color="#f0f4fc",
+            width=159,
+            height=42,
+            font=("Poppins Medium", 18)
+        )
+        five_passenger.place(x=53, y=170, anchor="nw")
+
+        seven_passenger = ctk.CTkButton(
+            self.master,
+            text="7 Passengers",
+            bg_color="white",
+            fg_color="#f0f4fc",
+            text_color="#1572D3",
+            border_color="#f0f4fc",
+            width=159,
+            height=42,
+            font=("Poppins Medium", 18)
+        )
+        seven_passenger.place(x=263, y=170, anchor="nw")
+
+        manufacturer_year_entry = ctk.CTkEntry(
+            self.master,
+            bg_color="white",
+            fg_color="#f0f4fc",
+            text_color="#1572D3",
+            border_color="#f0f4fc",
+            width=167,
+            height=38,
+            font=("Poppins Medium", 20),
+            textvariable=self.manu_year
+        )
+        manufacturer_year_entry.place(x=53,y=287)
+
+        auto_button = ctk.CTkButton(
+            self.master,
+            text="Auto",
+            bg_color="white",
+            fg_color="#f0f4fc",
+            text_color="#1572D3",
+            border_color="#f0f4fc",
+            width=97,
+            height=42,
+            font=("Poppins Medium", 18)
+        )
+        auto_button.place(x=53, y=403, anchor="nw")
+
+        manual_button = ctk.CTkButton(
+            self.master,
+            text="Manual",
+            bg_color="white",
+            fg_color="#f0f4fc",
+            text_color="#1572D3",
+            border_color="#f0f4fc",
+            width=118,
+            height=42,
+            font=("Poppins Medium", 18)
+        )
+        manual_button.place(x=187, y=403, anchor="nw")
+
+        price_1 = ctk.CTkButton(
+            self.master,
+            text="$",
+            bg_color="white",
+            fg_color="#f0f4fc",
+            text_color="#1572D3",
+            border_color="#f0f4fc",
+            width=74,
+            height=42,
+            font=("Poppins Medium", 18)
+        )
+        price_1.place(x=53, y=518, anchor="nw")
+
+        price_2 = ctk.CTkButton(
+            self.master,
+            text="$$",
+            bg_color="white",
+            fg_color="#f0f4fc",
+            text_color="#1572D3",
+            border_color="#f0f4fc",
+            width=83,
+            height=42,
+            font=("Poppins Medium", 18)
+        )
+        price_2.place(x=178, y=518, anchor="nw")
+
+        price_3 = ctk.CTkButton(
+            self.master,
+            text="$$$",
+            bg_color="white",
+            fg_color="#f0f4fc",
+            text_color="#1572D3",
+            border_color="#f0f4fc",
+            width=92,
+            height=42,
+            font=("Poppins Medium", 18)
+        )
+        price_3.place(x=309, y=518, anchor="nw")
+
+        reset_button = ctk.CTkButton(
+            self.master,
+            text="Reset",
+            bg_color="white",
+            fg_color="#1572D3",
+            text_color="white",
+            border_color="#1572D3",
+            width=137,
+            height=38,
+            font=("Poppins Medium", 18)
+        )
+        reset_button.place(x=74, y=610, anchor="nw")
+
+        search_button = ctk.CTkButton(
+            self.master,
+            text="Search",
+            bg_color="white",
+            fg_color="#1572D3",
+            text_color="white",
+            border_color="#1572D3",
+            width=137,
+            height=38,
+            font=("Poppins Medium", 18)
+        )
+        search_button.place(x=237, y=610, anchor="nw")
+
+        back_button = ctk.CTkButton(
+            self.master,
+            text="Back",
+            bg_color="white",
+            fg_color="#1572D3",
+            text_color="white",
+            border_color="#1572D3",
+            width=107,
+            height=48,
+            font=("Poppins Medium", 18),
+            command=self.home_page
+        )
+        back_button.place(x=31, y=725, anchor="nw")
+
         car_frame = ctk.CTkScrollableFrame(
             master=self.master,
             width=1056-30,
@@ -356,19 +514,59 @@ class App:
         self.cursor.execute('SELECT * FROM CARS')
         results = self.cursor.fetchall()
         for car in results:
-
-
             car_slot_frame = ctk.CTkFrame(master=car_frame,bg_color="white",fg_color="white")
-            pil_image = img.open('assets/car slot frame.png')
-            slot_image = ctk.CTkImage(light_image=pil_image,size=(903,248))
+            slot_image = ctk.CTkImage(light_image=img.open('assets/car slot frame.png'),size=(903,248))
             slot_image_label = ctk.CTkLabel(master=car_slot_frame,image=slot_image, text="")
-            slot_image_label.pack() 
+            slot_image_label.pack()
+
+            #car image
+            pil_image = img.open("assets/cars/" + car[4])
+            car_image = ctk.CTkImage(light_image=img.open("assets/cars/" + car[4]), size=(272,round(272*pil_image.size[1]/pil_image.size[0])))
+            car_image_label = ctk.CTkLabel(master=car_slot_frame, image=car_image, text="")
+            car_image_label.place(x=50,y=56,anchor="nw")
             car_slot_frame.pack()
-            # pil_image = img.open('assets/cars/'+car[4])
-            # size_ratio = pil_image.size[1]/pil_image.size[0]
-            # car_image = ctk.CTkImage(light_image=img.open("assets/cars/"+car[4]), size=(300,round(300*size_ratio)))
-            # car_image_label = ctk.CTkLabel(master=single_frame, image=car_image, text="")
-            # car_image_label.pack(side="left")
-            # model_label = ctk.CTkLabel(master=single_frame,text=car[2])
-            # model_label.pack(side="left")
-            # single_frame.pack(fill="x")
+
+            #car name
+            car_name = ctk.CTkLabel(master=car_slot_frame,text=car[2],font=("Poppins Medium",32),text_color="black")
+            car_name.place(x=380,y=20)
+            #rating
+            car_rating = ctk.CTkLabel(master=car_slot_frame, text=car[6], font=("Poppins Regular", 20), text_color="black")
+            car_rating.place(x=410, y=70)
+            #capacity
+            car_capacity = ctk.CTkLabel(master=car_slot_frame, text=str(car[5])+" Passengers", font=("Poppins Regular", 20),
+                                      text_color="#959595")
+            car_capacity.place(x=416, y=120)
+            # year
+            car_manufacturer_year = ctk.CTkLabel(master=car_slot_frame, text=car[1],
+                                        font=("Poppins Regular", 20),
+                                        text_color="#959595")
+            car_manufacturer_year.place(x=595, y=120)
+            # price
+            car_price = ctk.CTkLabel(master=car_slot_frame, text="RM"+str(car[3]),
+                                        font=("Poppins Semibold", 18),
+                                        text_color="black")
+            car_price.place(x=502, y=171)
+            #rent button
+            loginButton = ctk.CTkButton(
+                master=car_slot_frame,
+                text="Rent",
+                bg_color="white",
+                fg_color="#1572D3",
+                text_color="white",
+                border_color="#1572D3",
+                width=137,
+                height=38,
+                font=("Poppins Medium", 14)
+            )
+            loginButton.place(x=708, y=166, anchor="nw")
+
+    def set_search_option(self,option):
+        match option:
+            case "5 Passengers":
+                self.search_options["capacity"] = 5
+            case "7 Passengers":
+                self.search_options["capacity"] = 7
+            case "Manufacturer Year":
+                self.search_options["manufacturer year"] = self.manu_year.get()
+            case "Auto":
+                self.
