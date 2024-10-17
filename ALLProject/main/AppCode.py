@@ -342,17 +342,33 @@ class App:
         for i in self.master.winfo_children():
             i.destroy()
 
-        car_frame = ctk.CTkScrollableFrame(master=self.master,width=1210,height=760)
-        car_frame.place(x=300,y=10,anchor="nw")
+        rental_ui = ctk.CTkImage(light_image=img.open("assets/car rental ui.png"), size=(self.width, self.height-64))
+        rental_ui_label = ctk.CTkLabel(master=self.master, image=rental_ui, text="")
+        rental_ui_label.place(x=0,y=0,anchor="nw")
+        car_frame = ctk.CTkScrollableFrame(
+            master=self.master,
+            width=1056-30,
+            height=760,
+            bg_color="white",
+            fg_color="white"
+        )
+        car_frame.place(x=480,y=10,anchor="nw")
         self.cursor.execute('SELECT * FROM CARS')
         results = self.cursor.fetchall()
         for car in results:
-            single_frame = ctk.CTkFrame(master=car_frame)
-            pil_image = img.open('assets/cars/'+car[4])
-            size_ratio = pil_image.size[1]/pil_image.size[0]
-            car_image = ctk.CTkImage(light_image=img.open("assets/cars/"+car[4]), size=(300,round(300*size_ratio)))
-            car_image_label = ctk.CTkLabel(master=single_frame, image=car_image, text="")
-            car_image_label.pack(side="left")
-            model_label = ctk.CTkLabel(master=single_frame,text=car[2])
-            model_label.pack(side="left")
-            single_frame.pack(fill="x")
+
+
+            car_slot_frame = ctk.CTkFrame(master=car_frame,bg_color="white",fg_color="white")
+            pil_image = img.open('assets/car slot frame.png')
+            slot_image = ctk.CTkImage(light_image=pil_image,size=(903,248))
+            slot_image_label = ctk.CTkLabel(master=car_slot_frame,image=slot_image, text="")
+            slot_image_label.pack() 
+            car_slot_frame.pack()
+            # pil_image = img.open('assets/cars/'+car[4])
+            # size_ratio = pil_image.size[1]/pil_image.size[0]
+            # car_image = ctk.CTkImage(light_image=img.open("assets/cars/"+car[4]), size=(300,round(300*size_ratio)))
+            # car_image_label = ctk.CTkLabel(master=single_frame, image=car_image, text="")
+            # car_image_label.pack(side="left")
+            # model_label = ctk.CTkLabel(master=single_frame,text=car[2])
+            # model_label.pack(side="left")
+            # single_frame.pack(fill="x")
