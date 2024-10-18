@@ -14,6 +14,32 @@ pyglet.font.add_file("assets/fonts/Poppins-SemiBold.ttf")
 pyglet.font.add_file("assets/fonts/Poppins-Light.ttf")
 pyglet.font.add_file("assets/fonts/Poppins-Medium.ttf")
 
+def check_filter_options(dictionary, array):
+    i = 0
+    for option in dictionary:
+        if dictionary[option]=="any":
+            continue
+        match option:
+            case "capacity":
+                if dictionary[option]!=array[5]:
+                    return False
+            case "manufacturer year":
+                if dictionary[option] != str(array[1]):
+                    return False
+            case "transmission":
+                if dictionary[option] != array[7]:
+                    return False
+            case "price":
+                if dictionary[option]==1:
+                    if array[3] >=100: return False
+                elif dictionary[option] == 2:
+                    if array[3] >= 200 or array[3]<100: return False
+                else:
+                    if array[3] < 200: return False
+
+        i += 1
+    return True
+
 class App:
     def __init__(self, master):
         #app settings
@@ -25,16 +51,16 @@ class App:
         self.height = self.master.winfo_screenheight()
 
         # ui definitions
-        self.manu_year = ctk.IntVar()
+        self.manu_year = ctk.StringVar()
         self.firstName = ctk.StringVar()
         self.firstName.set("Default")
         self.lastName = ctk.StringVar()
         self.lastName.set("User")
         self.search_options = {
-            "capacity": 5,
-            "manufacturer year": 2000,
-            "transmission": "auto",
-            "price": 1
+            "capacity": "any",
+            "manufacturer year": "any",
+            "transmission": "any",
+            "price": "any"
         }
 
         #database stuff
@@ -62,7 +88,7 @@ class App:
 
         self.sqliteConnection.commit()
         self.master.bind("<KeyRelease>", self.login_enter)
-        self.rental_page()
+        self.login()
 
     def login(self):
         for i in self.master.winfo_children():
@@ -350,7 +376,7 @@ class App:
         else:
             messagebox.showerror("Wrong code","Wrong code: Try again")
 
-    def rental_page(self):
+    def rental_page(self, option_filter={"capacity": "any", "manufacturer year": "any", "transmission": "any", "price": "any"}):
         for i in self.master.winfo_children():
             i.destroy()
 
@@ -368,7 +394,8 @@ class App:
             border_color="#f0f4fc",
             width=159,
             height=42,
-            font=("Poppins Medium", 18)
+            font=("Poppins Medium", 18),
+            command=lambda : self.set_search_option("5 Passengers")
         )
         five_passenger.place(x=53, y=170, anchor="nw")
 
@@ -381,10 +408,12 @@ class App:
             border_color="#f0f4fc",
             width=159,
             height=42,
-            font=("Poppins Medium", 18)
+            font=("Poppins Medium", 18),
+            command=lambda : self.set_search_option("7 Passengers")
         )
         seven_passenger.place(x=263, y=170, anchor="nw")
 
+        self.manu_year.trace("w", lambda name, index, mode, sv=self.manu_year: self.set_search_option("Manufacturer Year"))
         manufacturer_year_entry = ctk.CTkEntry(
             self.master,
             bg_color="white",
@@ -407,7 +436,8 @@ class App:
             border_color="#f0f4fc",
             width=97,
             height=42,
-            font=("Poppins Medium", 18)
+            font=("Poppins Medium", 18),
+            command=lambda : self.set_search_option("Auto")
         )
         auto_button.place(x=53, y=403, anchor="nw")
 
@@ -420,7 +450,8 @@ class App:
             border_color="#f0f4fc",
             width=118,
             height=42,
-            font=("Poppins Medium", 18)
+            font=("Poppins Medium", 18),
+            command=lambda : self.set_search_option("Manual")
         )
         manual_button.place(x=187, y=403, anchor="nw")
 
@@ -433,7 +464,8 @@ class App:
             border_color="#f0f4fc",
             width=74,
             height=42,
-            font=("Poppins Medium", 18)
+            font=("Poppins Medium", 18),
+            command=lambda : self.set_search_option("Price 1")
         )
         price_1.place(x=53, y=518, anchor="nw")
 
@@ -446,7 +478,8 @@ class App:
             border_color="#f0f4fc",
             width=83,
             height=42,
-            font=("Poppins Medium", 18)
+            font=("Poppins Medium", 18),
+            command=lambda : self.set_search_option("Price 2")
         )
         price_2.place(x=178, y=518, anchor="nw")
 
@@ -459,7 +492,8 @@ class App:
             border_color="#f0f4fc",
             width=92,
             height=42,
-            font=("Poppins Medium", 18)
+            font=("Poppins Medium", 18),
+            command=lambda : self.set_search_option("Price 3")
         )
         price_3.place(x=309, y=518, anchor="nw")
 
@@ -472,7 +506,8 @@ class App:
             border_color="#1572D3",
             width=137,
             height=38,
-            font=("Poppins Medium", 18)
+            font=("Poppins Medium", 18),
+            command=lambda : self.set_search_option("Reset")
         )
         reset_button.place(x=74, y=610, anchor="nw")
 
@@ -513,7 +548,11 @@ class App:
         car_frame.place(x=480,y=10,anchor="nw")
         self.cursor.execute('SELECT * FROM CARS')
         results = self.cursor.fetchall()
+        i = 0
         for car in results:
+            if not check_filter_options(option_filter,car):
+                continue
+
             car_slot_frame = ctk.CTkFrame(master=car_frame,bg_color="white",fg_color="white")
             slot_image = ctk.CTkImage(light_image=img.open('assets/car slot frame.png'),size=(903,248))
             slot_image_label = ctk.CTkLabel(master=car_slot_frame,image=slot_image, text="")
@@ -547,7 +586,7 @@ class App:
                                         text_color="black")
             car_price.place(x=502, y=171)
             #rent button
-            loginButton = ctk.CTkButton(
+            rentButton = ctk.CTkButton(
                 master=car_slot_frame,
                 text="Rent",
                 bg_color="white",
@@ -558,9 +597,10 @@ class App:
                 height=38,
                 font=("Poppins Medium", 14)
             )
-            loginButton.place(x=708, y=166, anchor="nw")
+            rentButton.place(x=708, y=166, anchor="nw")
 
     def set_search_option(self,option):
+        disable = False
         match option:
             case "5 Passengers":
                 self.search_options["capacity"] = 5
@@ -568,5 +608,19 @@ class App:
                 self.search_options["capacity"] = 7
             case "Manufacturer Year":
                 self.search_options["manufacturer year"] = self.manu_year.get()
+                if len(self.manu_year.get())==4:
+                    disable = True
             case "Auto":
-                self.
+                self.search_options["transmission"]  = "auto"
+            case "Manual":
+                self.search_options["transmission"] = "manual"
+            case "Price 1":
+                self.search_options["price"] = 1
+            case "Price 2":
+                self.search_options["price"] = 2
+            case "Price 3":
+                self.search_options["price"] = 3
+            case "Reset":
+                self.search_options = {"capacity": "any", "manufacturer year": "any", "transmission": "any", "price": "any"}
+
+        if not disable: self.rental_page(self.search_options)

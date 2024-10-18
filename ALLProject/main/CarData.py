@@ -13,7 +13,8 @@ cursor.execute(
         PRICE INTEGER NOT NULL,
         IMAGE VARCHAR(255) NOT NULL,
         CAPACITY INTEGER NOT NULL,
-        RATING INTEGER NOT NULL
+        RATING INTEGER NOT NULL,
+        TRANSMISSION VARCHAR(255) NOT NULL
     )
     '''
 )
@@ -25,7 +26,8 @@ car_list = [
         "price" : 255,
         "image" : "honda accord.png",
         "capacity" : 5,
-        "rating" : 4.5
+        "rating" : 4.5,
+        "transmission" : "auto"
     },
 
     {
@@ -34,7 +36,8 @@ car_list = [
         "price" : 180,
         "image" : "honda city.png",
         "capacity" : 5,
-        "rating" : 4.8
+        "rating" : 4.8,
+        "transmission" : "auto"
     },
 
     {
@@ -43,7 +46,8 @@ car_list = [
         "price" : 150,
         "image" : "honda civic.png",
         "capacity" : 5,
-        "rating" : 3.9
+        "rating" : 3.9,
+        "transmission" : "manual"
     },
     {
         "manufacturer_year" : 2022,
@@ -51,7 +55,8 @@ car_list = [
         "price" : 200,
         "image" : "hyundai sonata.png",
         "capacity" : 5,
-        "rating" : 4.2
+        "rating" : 4.2,
+        "transmission" : "manual"
     },
     {
         "manufacturer_year" : 2018,
@@ -59,7 +64,8 @@ car_list = [
         "price" : 140,
         "image" : "nissan serena.png",
         "capacity" : 7,
-        "rating" : 4.9
+        "rating" : 4.9,
+        "transmission" : "auto"
     },
     {
         "manufacturer_year" : 2012,
@@ -67,7 +73,8 @@ car_list = [
         "price" : 100,
         "image" : "perodua myvi.png",
         "capacity" : 5,
-        "rating" : 4.8
+        "rating" : 4.8,
+        "transmission" : "auto"
     }
 ]
 
@@ -84,7 +91,8 @@ if len(result)==0:
             PRICE, 
             IMAGE,
             CAPACITY,
-            RATING
+            RATING,
+            TRANSMISSION
         )
         VALUES
         (
@@ -93,7 +101,8 @@ if len(result)==0:
             {car["price"]},
             \'{car["image"]}\',
             {car["capacity"]},
-            {car["rating"]}
+            {car["rating"]},
+            \'{car["transmission"]}\'
         )
         '''
         cursor.execute(query)
