@@ -5,7 +5,7 @@ from PIL import Image
 root=customtkinter.CTk()
 root.geometry("1200x800")
 
-user_account_ui=customtkinter.CTkImage(light_image=Image.open("Project Images/DriveEase UI.png"),size=(root.winfo_screenwidth(),root.winfo_screenheight()-68))
+user_account_ui=customtkinter.CTkImage(light_image=Image.open("Project Images/DriveEaseUI.png"),size=(root.winfo_screenwidth(),root.winfo_screenheight()-68))
 user_account_ui_label=customtkinter.CTkLabel(root,image=user_account_ui,text="")
 user_account_ui_label.place(x=0,y=0,anchor="nw")
 
