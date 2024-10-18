@@ -7,7 +7,7 @@ root = customtkinter.CTk()
 root.title("Registration Page")
 root.geometry('1536x800')
 
-background_image = customtkinter.CTkImage(Image.open("Registration_page.png"), size=(root.winfo_screenwidth(), root.winfo_screenheight()-64))
+background_image = customtkinter.CTkImage(Image.open("Registration_page.png"), size=(root.winfo_screenwidth(), root.winfo_screenheight()-71))
 background_image_label = customtkinter.CTkLabel(master=root.master, image=background_image, text="")
 background_image_label.place(relx=0, rely=0)
 
@@ -69,7 +69,7 @@ date_entry.place(x=142/1280*root.winfo_screenwidth(),y=342/720*root.winfo_screen
 #Email
 email_entry = customtkinter.CTkEntry(root, placeholder_text="alicetan@yahoo.com", width=215/1280*root.winfo_screenwidth(), height=34/720*root.winfo_screenheight(),
                                      bg_color="white",fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black")
-email_entry.place(x=142/1280*root.winfo_screenwidth(),y=412/720*root.winfo_screenheight())
+email_entry.place(x=142/1280*root.winfo_screenwidth(),y=420/720*root.winfo_screenheight())
 
 #Username
 user_entry = customtkinter.CTkEntry(root, placeholder_text="Alicewonderland", width=215/1280*root.winfo_screenwidth(), height=34/720*root.winfo_screenheight(), bg_color="white",
