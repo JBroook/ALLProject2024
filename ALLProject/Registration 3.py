@@ -52,48 +52,48 @@ def register():
     root.destroy()  # Close the Invoice Page
 
 #First Name
-first_entry = customtkinter.CTkEntry(root, placeholder_text="Alice", width=215, height=34, bg_color="white",
+first_entry = customtkinter.CTkEntry(root, placeholder_text="Alice", width=215/1280*root.winfo_screenwidth(), height=34/720*root.winfo_screenheight(), bg_color="white",
                                      fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black")
 first_entry.place(x=142/1280*root.winfo_screenwidth(),y=194/720*root.winfo_screenheight())
 
 #Last Name
-last_entry = customtkinter.CTkEntry(root, placeholder_text="Tan", width=215, height=34, bg_color="white",
+last_entry = customtkinter.CTkEntry(root, placeholder_text="Tan", width=215/1280*root.winfo_screenwidth(), height=34/720*root.winfo_screenheight(), bg_color="white",
                                     fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black")
 last_entry.place(x=142/1280*root.winfo_screenwidth(),y=262/720*root.winfo_screenheight())
 
 #Date Of Birth
-date_entry = customtkinter.CTkEntry(root, placeholder_text="YYYY-MM-DD", width=215, height=34,
+date_entry = customtkinter.CTkEntry(root, placeholder_text="YYYY-MM-DD", width=215/1280*root.winfo_screenwidth(), height=34/720*root.winfo_screenheight(),
                                     bg_color="white",fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black")
 date_entry.place(x=142/1280*root.winfo_screenwidth(),y=342/720*root.winfo_screenheight())
 
 #Email
-email_entry = customtkinter.CTkEntry(root, placeholder_text="alicetan@yahoo.com", width=215, height=34,
+email_entry = customtkinter.CTkEntry(root, placeholder_text="alicetan@yahoo.com", width=215/1280*root.winfo_screenwidth(), height=34/720*root.winfo_screenheight(),
                                      bg_color="white",fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black")
 email_entry.place(x=142/1280*root.winfo_screenwidth(),y=412/720*root.winfo_screenheight())
 
 #Username
-user_entry = customtkinter.CTkEntry(root, placeholder_text="Alicewonderland", width=215, height=34, bg_color="white",
+user_entry = customtkinter.CTkEntry(root, placeholder_text="Alicewonderland", width=215/1280*root.winfo_screenwidth(), height=34/720*root.winfo_screenheight(), bg_color="white",
                                     fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black")
 user_entry.place(x=410/1280*root.winfo_screenwidth(),y=194/720*root.winfo_screenheight())
 
 #Password
-password_entry = customtkinter.CTkEntry(root, placeholder_text="******", width=215, height=34, bg_color="white",
+password_entry = customtkinter.CTkEntry(root, placeholder_text="******", width=215/1280*root.winfo_screenwidth(), height=34/720*root.winfo_screenheight(), bg_color="white",
                                         fg_color="#D9D9D9", border_color="#D9D9D9",text_color="black")
 password_entry.place(x=410/1280*root.winfo_screenwidth(),y=262/720*root.winfo_screenheight())
 
 #Confirm Password
-confirm_entry = customtkinter.CTkEntry(root, placeholder_text="******", width=215, height=34, bg_color="white",
+confirm_entry = customtkinter.CTkEntry(root, placeholder_text="******", width=215/1280*root.winfo_screenwidth(), height=34/720*root.winfo_screenheight(), bg_color="white",
                                        fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black")
 confirm_entry.place(x=410/1280*root.winfo_screenwidth(),y=343/720*root.winfo_screenheight())
 
 #Login Button
 back_button = customtkinter.CTkButton(root,text = "Back to Login" ,bg_color= "white", fg_color="#1572D3",text_color="white",
-            border_color="#1572D3", width=135, height=41, font=("Poppins Medium",18))
+            border_color="#1572D3", width=135/1280*root.winfo_screenwidth(), height=41/720*root.winfo_screenheight(), font=("Poppins Medium",18))
 back_button.place(x=246/1280*root.winfo_screenwidth(),y=500/720*root.winfo_screenheight())
 
 #Confirm Button
 confirm_button = customtkinter.CTkButton(root,text = "Continue" ,bg_color= "white", fg_color="#1572D3",text_color="white",
-            border_color="#1572D3", width=135, height=41, font=("Poppins Medium",18), command=register)
+            border_color="#1572D3", width=135/1280*root.winfo_screenwidth(), height=41/720*root.winfo_screenheight(), font=("Poppins Medium",18), command=register)
 confirm_button.place(x=402/1280*root.winfo_screenwidth(),y=500/720*root.winfo_screenheight())
 
 root.mainloop()
