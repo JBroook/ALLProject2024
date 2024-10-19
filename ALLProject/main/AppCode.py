@@ -117,8 +117,8 @@ class App:
         self.password = ctk.StringVar()
         passwordEntry = ctk.CTkEntry(self.master,
             textvariable=self.password,
-            width=402,
-            height=54,
+            width=402/1536*self.width,
+            height=54/864*self.height,
             bg_color="white",
             fg_color="#D9D9D9",
             border_color="#D9D9D9",
@@ -126,7 +126,7 @@ class App:
             font=("Poppins Light",24),
             show="*"
         )
-        passwordEntry.place(x=186,y=484,anchor="nw")
+        passwordEntry.place(x=186/1536*self.width,y=484/864*self.height,anchor="nw")
 
         # login/register frame
         loginButton = ctk.CTkButton(
@@ -137,11 +137,11 @@ class App:
             fg_color="#1572D3",
             text_color="white",
             border_color="#1572D3",
-            width=187,
-            height=57,
+            width=187/1536*self.width,
+            height=57/864*self.height,
             font=("Poppins Medium",18)
         )
-        loginButton.place(x=185,y=592-9,anchor="nw")
+        loginButton.place(x=185/1536*self.width,y=583/864*self.height,anchor="nw")
 
         registerButton = ctk.CTkButton(
             self.master,
@@ -151,11 +151,11 @@ class App:
             fg_color="#1572D3",
             text_color="white",
             border_color="#1572D3",
-            width=187,
-            height=57,
+            width=187/1536*self.width,
+            height=57/864*self.height,
             font=("Poppins Medium",18)
         )
-        registerButton.place(x=401,y=592-9,anchor="nw")
+        registerButton.place(x=401/1536*self.width,y=583/864*self.height,anchor="nw")
 
 
     def register(self):
@@ -321,46 +321,46 @@ class App:
         for i in self.master.winfo_children():
             i.destroy()
 
-        homepage_ui = ctk.CTkImage(light_image=img.open("assets/home page ui.png"), size=(1536, 800))
+        homepage_ui = ctk.CTkImage(light_image=img.open("assets/home page ui.png"), size=(self.width, self.height-64))
         homepage_ui_label = ctk.CTkLabel(self.master,image=homepage_ui,text="")
         homepage_ui_label.place(relx=0,rely=0,anchor="nw")
 
         rent_button = ctk.CTkButton(
             master=self.master,
             text="Go",
-            width=158,
-            height=40,
+            width=158/1536*self.width,
+            height=40/864*self.height,
             font=("Poppins Medium",14),
             bg_color="#FFFFFF",
             fg_color="#1572D3",
             text_color="white",
             command=self.rental_page
         )
-        rent_button.place(x=1210  ,y=204,anchor="nw")
+        rent_button.place(x=1210/1536*self.width  ,y=204/864*self.height,anchor="nw")
 
         account_button = ctk.CTkButton(
             master=self.master,
             text="Go",
-            width=158,
-            height=42,
+            width=158/1536*self.width,
+            height=42/864*self.height,
             font=("Poppins Medium", 14),
             bg_color="#FFFFFF",
             fg_color="#1572D3",
             text_color="white"
         )
-        account_button.place(x=1210, y=441, anchor="nw")
+        account_button.place(x=1210/1536*self.width, y=441/864*self.height, anchor="nw")
 
         book_button = ctk.CTkButton(
             master=self.master,
             text="Go",
-            width=158,
-            height=42,
+            width=158/1536*self.width,
+            height=42/864*self.height,
             font=("Poppins Medium", 14),
             bg_color="#FFFFFF",
             fg_color="#1572D3",
             text_color="white"
         )
-        book_button.place(x=1210, y=673, anchor="nw")
+        book_button.place(x=1210/1536*self.width, y=673/864*self.height, anchor="nw")
 
     def check_verification(self):
         if self.verification_code.get()==self.random_code:
@@ -392,12 +392,12 @@ class App:
             fg_color="#f0f4fc",
             text_color="#1572D3",
             border_color="#f0f4fc",
-            width=159,
-            height=42,
+            width=159/1536*self.width,
+            height=42/864*self.height,
             font=("Poppins Medium", 18),
             command=lambda : self.set_search_option("5 Passengers")
         )
-        five_passenger.place(x=53, y=170, anchor="nw")
+        five_passenger.place(x=53/1536*self.width, y=170/864*self.height, anchor="nw")
 
         seven_passenger = ctk.CTkButton(
             self.master,
@@ -406,12 +406,12 @@ class App:
             fg_color="#f0f4fc",
             text_color="#1572D3",
             border_color="#f0f4fc",
-            width=159,
-            height=42,
+            width=159/1536*self.width,
+            height=42/864*self.height,
             font=("Poppins Medium", 18),
             command=lambda : self.set_search_option("7 Passengers")
         )
-        seven_passenger.place(x=263, y=170, anchor="nw")
+        seven_passenger.place(x=263/1536*self.width, y=170/864*self.height, anchor="nw")
 
         self.manu_year.trace("w", lambda name, index, mode, sv=self.manu_year: self.set_search_option("Manufacturer Year"))
         manufacturer_year_entry = ctk.CTkEntry(
@@ -420,12 +420,12 @@ class App:
             fg_color="#f0f4fc",
             text_color="#1572D3",
             border_color="#f0f4fc",
-            width=167,
-            height=38,
+            width=167/1536*self.width,
+            height=38/864*self.height,
             font=("Poppins Medium", 20),
             textvariable=self.manu_year
         )
-        manufacturer_year_entry.place(x=53,y=287)
+        manufacturer_year_entry.place(x=53/1536*self.width,y=287/864*self.height)
 
         auto_button = ctk.CTkButton(
             self.master,
@@ -434,12 +434,12 @@ class App:
             fg_color="#f0f4fc",
             text_color="#1572D3",
             border_color="#f0f4fc",
-            width=97,
-            height=42,
+            width=97/1536*self.width,
+            height=42/864*self.height,
             font=("Poppins Medium", 18),
             command=lambda : self.set_search_option("Auto")
         )
-        auto_button.place(x=53, y=403, anchor="nw")
+        auto_button.place(x=53/1536*self.width, y=403/864*self.height, anchor="nw")
 
         manual_button = ctk.CTkButton(
             self.master,
@@ -448,12 +448,12 @@ class App:
             fg_color="#f0f4fc",
             text_color="#1572D3",
             border_color="#f0f4fc",
-            width=118,
-            height=42,
+            width=118/1536*self.width,
+            height=42/864*self.height,
             font=("Poppins Medium", 18),
             command=lambda : self.set_search_option("Manual")
         )
-        manual_button.place(x=187, y=403, anchor="nw")
+        manual_button.place(x=187/1536*self.width, y=403/864*self.height, anchor="nw")
 
         price_1 = ctk.CTkButton(
             self.master,
@@ -462,12 +462,12 @@ class App:
             fg_color="#f0f4fc",
             text_color="#1572D3",
             border_color="#f0f4fc",
-            width=74,
-            height=42,
+            width=74/1536*self.width,
+            height=42/864*self.height,
             font=("Poppins Medium", 18),
             command=lambda : self.set_search_option("Price 1")
         )
-        price_1.place(x=53, y=518, anchor="nw")
+        price_1.place(x=53/1536*self.width, y=518/864*self.height, anchor="nw")
 
         price_2 = ctk.CTkButton(
             self.master,
@@ -476,12 +476,12 @@ class App:
             fg_color="#f0f4fc",
             text_color="#1572D3",
             border_color="#f0f4fc",
-            width=83,
-            height=42,
+            width=83/1536*self.width,
+            height=42/864*self.height,
             font=("Poppins Medium", 18),
             command=lambda : self.set_search_option("Price 2")
         )
-        price_2.place(x=178, y=518, anchor="nw")
+        price_2.place(x=178/1536*self.width, y=518/864*self.height, anchor="nw")
 
         price_3 = ctk.CTkButton(
             self.master,
@@ -490,12 +490,12 @@ class App:
             fg_color="#f0f4fc",
             text_color="#1572D3",
             border_color="#f0f4fc",
-            width=92,
-            height=42,
+            width=92/1536*self.width,
+            height=42/864*self.height,
             font=("Poppins Medium", 18),
             command=lambda : self.set_search_option("Price 3")
         )
-        price_3.place(x=309, y=518, anchor="nw")
+        price_3.place(x=309/1536*self.width, y=518/864*self.height, anchor="nw")
 
         reset_button = ctk.CTkButton(
             self.master,
@@ -504,25 +504,12 @@ class App:
             fg_color="#1572D3",
             text_color="white",
             border_color="#1572D3",
-            width=137,
-            height=38,
+            width=137/1536*self.width,
+            height=38/864*self.height,
             font=("Poppins Medium", 18),
             command=lambda : self.set_search_option("Reset")
         )
-        reset_button.place(x=74, y=610, anchor="nw")
-
-        search_button = ctk.CTkButton(
-            self.master,
-            text="Search",
-            bg_color="white",
-            fg_color="#1572D3",
-            text_color="white",
-            border_color="#1572D3",
-            width=137,
-            height=38,
-            font=("Poppins Medium", 18)
-        )
-        search_button.place(x=237, y=610, anchor="nw")
+        reset_button.place(x=151/1536*self.width, y=600/864*self.height, anchor="nw")
 
         back_button = ctk.CTkButton(
             self.master,
@@ -531,21 +518,21 @@ class App:
             fg_color="#1572D3",
             text_color="white",
             border_color="#1572D3",
-            width=107,
-            height=48,
+            width=107/1536*self.width,
+            height=48/864*self.height,
             font=("Poppins Medium", 18),
             command=self.home_page
         )
-        back_button.place(x=31, y=725, anchor="nw")
+        back_button.place(x=31/1536*self.width, y=725/864*self.height, anchor="nw")
 
         car_frame = ctk.CTkScrollableFrame(
             master=self.master,
-            width=1056-30,
-            height=760,
+            width=1026/1536*self.width,
+            height=760/864*self.height,
             bg_color="white",
             fg_color="white"
         )
-        car_frame.place(x=480,y=10,anchor="nw")
+        car_frame.place(x=480/1536*self.width,y=10/864*self.height,anchor="nw")
         self.cursor.execute('SELECT * FROM CARS')
         results = self.cursor.fetchall()
         i = 0
