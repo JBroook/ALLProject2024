@@ -52,10 +52,13 @@ class App:
 
         # ui definitions
         self.manu_year = ctk.StringVar()
-        self.firstName = ctk.StringVar()
-        self.firstName.set("Default")
-        self.lastName = ctk.StringVar()
-        self.lastName.set("User")
+        self.user_info = {
+            "first name" : "Default",
+            "last name" : "User",
+            "username" : "Unknown",
+            "email" : "Unknown",
+            "id" : 0
+        }
         self.search_options = {
             "capacity": "any",
             "manufacturer year": "any",
@@ -161,84 +164,66 @@ class App:
     def register(self):
         for i in self.master.winfo_children():
             i.destroy()
-        registrationPage = ctk.CTkFrame(self.master)
 
-        registerLabel = ctk.CTkLabel(registrationPage, text="Register an account", font=("Arial", 24))
-        registerLabel.pack(anchor="center", pady="10")
+        background_image = ctk.CTkImage(img.open("assets/registration page.png"), size=(self.width, self.height - 71))
+        background_image_label = ctk.CTkLabel(master=self.master.master, image=background_image, text="")
+        background_image_label.place(relx=0, rely=0)
 
-        top_frame = ctk.CTkFrame(registrationPage)
-        personal_info_frame = ctk.CTkFrame(top_frame)
-
+        # First Name
         self.newFirstName = ctk.StringVar()
-        newFirstNameFrame = ctk.CTkFrame(personal_info_frame)
-        newFirstNameLabel = ctk.CTkLabel(newFirstNameFrame, text="First Name: ")
-        newFirstNameLabel.pack(anchor="w")
-        newFirstNameEntry = ctk.CTkEntry(newFirstNameFrame, textvariable=self.newFirstName)
-        newFirstNameEntry.pack()
-        newFirstNameFrame.pack()
+        first_entry = ctk.CTkEntry(self.master, placeholder_text="Alice", width=215/1536*self.width, height=34/864*self.height, bg_color="white",
+                                   fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black", textvariable=self.newFirstName)
+        first_entry.place(x=120 / 1280 * self.width, y=194 / 720 * self.height)
 
+        # Last Name
         self.newLastName = ctk.StringVar()
-        newLastNameFrame = ctk.CTkFrame(personal_info_frame)
-        newLastNameLabel = ctk.CTkLabel(newLastNameFrame, text="Last Name: ")
-        newLastNameLabel.pack(anchor="w")
-        newLastNameEntry = ctk.CTkEntry(newLastNameFrame, textvariable=self.newLastName)
-        newLastNameEntry.pack()
-        newLastNameFrame.pack()
+        last_entry = ctk.CTkEntry(self.master, placeholder_text="Tan", width=215/1536*self.width, height=34/864*self.height, bg_color="white",
+                                  fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black", textvariable=self.newLastName)
+        last_entry.place(x=120 / 1280 * self.width, y=262 / 720 * self.height)
 
+        # Date Of Birth
         self.newDOB = ctk.StringVar()
-        newDOBFrame = ctk.CTkFrame(personal_info_frame)
-        newDOBLabel = ctk.CTkLabel(newDOBFrame, text="DOB (YYYY-MM-DD): ")
-        newDOBLabel.pack(anchor="w")
-        newDOBEntry = ctk.CTkEntry(newDOBFrame, textvariable=self.newDOB)
-        newDOBEntry.pack()
-        newDOBFrame.pack()
+        date_entry = ctk.CTkEntry(self.master, placeholder_text="YYYY-MM-DD", width=215/1536*self.width, height=34/864*self.height,
+                                  bg_color="white", fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",textvariable=self.newDOB)
+        date_entry.place(x=120 / 1280 * self.width, y=342 / 720 * self.height)
 
-        account_info_frame = ctk.CTkFrame(top_frame)
-        self.newUsername = ctk.StringVar()
-        newUsernameFrame = ctk.CTkFrame(account_info_frame)
-        newUsernameLabel = ctk.CTkLabel(newUsernameFrame, text="Username: ")
-        newUsernameLabel.pack(anchor="w")
-        newUsernameEntry = ctk.CTkEntry(newUsernameFrame, textvariable=self.newUsername)
-        newUsernameEntry.pack()
-        newUsernameFrame.pack()
-
+        # Email
         self.newEmail = ctk.StringVar()
-        newEmailFrame = ctk.CTkFrame(account_info_frame)
-        newEmailLabel = ctk.CTkLabel(newEmailFrame, text="Email: ")
-        newEmailLabel.pack(anchor="w")
-        newEmailEntry = ctk.CTkEntry(newEmailFrame, textvariable=self.newEmail)
-        newEmailEntry.pack()
-        newEmailFrame.pack()
+        email_entry = ctk.CTkEntry(self.master, placeholder_text="alicetan@yahoo.com", width=215/1536*self.width, height=34/864*self.height,
+                                   bg_color="white", fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",textvariable=self.newEmail)
+        email_entry.place(x=120 / 1280 * self.width, y=412 / 720 * self.height)
 
+        # Username
+        self.newUsername = ctk.StringVar()
+        user_entry = ctk.CTkEntry(self.master, placeholder_text="Alicewonderland", width=215/1536*self.width, height=34/864*self.height,
+                                  bg_color="white",
+                                  fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",textvariable=self.newUsername)
+        user_entry.place(x=390 / 1280 * self.width, y=194 / 720 * self.height)
+
+        # Password
         self.newPassword = ctk.StringVar()
-        newPasswordFrame = ctk.CTkFrame(account_info_frame)
-        newPasswordLabel = ctk.CTkLabel(newPasswordFrame, text="Password: ")
-        newPasswordLabel.pack(anchor="w")
-        newPasswordEntry = ctk.CTkEntry(newPasswordFrame, textvariable=self.newPassword)
-        newPasswordEntry.pack()
-        newPasswordFrame.pack()
+        password_entry = ctk.CTkEntry(self.master, placeholder_text="******", width=215/1536*self.width, height=34/864*self.height, bg_color="white",
+                                      fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",textvariable=self.newPassword)
+        password_entry.place(x=390 / 1280 * self.width, y=262 / 720 * self.height)
 
+        # Confirm Password
         self.confirmPassword = ctk.StringVar()
-        confirmPasswordFrame = ctk.CTkFrame(account_info_frame)
-        confirmPasswordLabel = ctk.CTkLabel(confirmPasswordFrame, text="Confirm Password: ")
-        confirmPasswordLabel.pack(anchor="w")
-        confirmPasswordEntry = ctk.CTkEntry(confirmPasswordFrame, textvariable=self.confirmPassword)
-        confirmPasswordEntry.pack()
-        confirmPasswordFrame.pack()
+        confirm_entry = ctk.CTkEntry(self.master, placeholder_text="******", width=215/1536*self.width, height=34/864*self.height, bg_color="white",
+                                     fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",textvariable=self.confirmPassword)
+        confirm_entry.place(x=390 / 1280 * self.width, y=343 / 720 * self.height)
 
-        personal_info_frame.pack(side="left",padx=10)
-        account_info_frame.pack(side="left",padx=10)
-        top_frame.pack()
+        # Login Button
+        back_button = ctk.CTkButton(self.master, text="Back to Login", bg_color="white", fg_color="#1572D3",
+                                    text_color="white",
+                                    border_color="#1572D3", width=135/1536*self.width, height=41/864*self.height, font=("Poppins Medium", 18), command=self.login)
+        back_button.place(x=226 / 1280 * self.width, y=500 / 720 * self.height)
 
-        # return to login/confirm register frame
-        registerButtonFrame = ctk.CTkFrame(registrationPage)
-        returnButton = ctk.CTkButton(registerButtonFrame, text="Return to Login", command=self.login)
-        returnButton.pack(side="left", padx="5")
-        self.confirmRegistrationButton = ctk.CTkButton(registerButtonFrame, text="Confirm", command=self.confirm_registration)
-        self.confirmRegistrationButton.pack(side="left", padx="5")
-        registerButtonFrame.pack(pady="10",side="bottom")
-
-        registrationPage.place(relx=0.5, rely=0.45, anchor="center")
+        # Confirm Button
+        self.confirm_button = ctk.CTkButton(self.master, text="Continue", bg_color="white", fg_color="#1572D3",
+                                       text_color="white",
+                                       border_color="#1572D3", width=135/1536*self.width, height=41/864*self.height, font=("Poppins Medium", 18),
+                                       command=self.confirm_registration)
+        self.confirm_button.place(x=382 / 1280 * self.width, y=500 / 720 * self.height)
 
     def test_credentials(self):
         query = f"SELECT * FROM USERS WHERE USERNAME = \'{self.username.get()}\';"
@@ -247,8 +232,11 @@ class App:
         if len(result):
             user = result[0]
             if user[3] == self.password.get():
-                self.firstName.set(user[4])
-                self.lastName.set(user[5])
+                self.user_info["first name"] = user[4]
+                self.user_info["last name"] = user[5]
+                self.user_info["username"] = user[1]
+                self.user_info["email"] = user[2]
+                self.user_info["id"] = user[0]
                 self.home_page()
             else:
                 messagebox.showerror("Error", "Password is wrong")
@@ -282,7 +270,7 @@ class App:
 
         if error :messagebox.showerror("Error", error)
         else:
-            self.confirmRegistrationButton.configure(state="disabled")
+            self.confirm_button.configure(state="disabled")
             #send verification code email
             msg = EmailMessage()
             self.random_code = ''.join(random.choices(string.ascii_letters,k=6))
@@ -619,7 +607,9 @@ class App:
         user_account_ui_label = ctk.CTkLabel(self.master, image=user_account_ui, text="")
         user_account_ui_label.place(x=0, y=0, anchor="nw")
 
-        first_name_entry = ctk.CTkEntry(
+        self.first_name = ctk.StringVar()
+        self.first_name.set(self.user_info["first name"])
+        self.first_name_entry = ctk.CTkEntry(
             self.master,
             width=357.85 / 1707 * self.width,
             height=56.69 / 1067 * self.height,
@@ -627,39 +617,58 @@ class App:
             fg_color="#D9D9D9",
             border_color="#D9D9D9",
             text_color="black",
-            font=("Poppins Light", 24))
-        first_name_entry.place(x=704.58 / 1707 * self.width, y=362.58 / 1067 * self.height,
+            font=("Poppins Light", 24),
+            textvariable=self.first_name
+        )
+        self.first_name_entry.place(x=704.58 / 1707 * self.width, y=362.58 / 1067 * self.height,
                                anchor="nw")
+        self.first_name_entry.configure(state="readonly")
 
-        last_name_entry = ctk.CTkEntry(self.master, width=357.85 / 1707 * self.width,
+        self.last_name = ctk.StringVar()
+        self.last_name.set(self.user_info["last name"])
+        self.last_name_entry = ctk.CTkEntry(self.master, width=357.85 / 1707 * self.width,
                                                  height=56.69 / 1067 * self.height,
                                                  bg_color="white",
                                                  fg_color="#D9D9D9",
                                                  border_color="#D9D9D9",
                                                  text_color="black",
-                                                 font=("Poppins Light", 24))
-        last_name_entry.place(x=1122.44 / 1707 * self.width, y=362.58 / 1067 * self.height,
+                                                 font=("Poppins Light", 24),
+                                                 textvariable=self.last_name
+                                       )
+        self.last_name_entry.place(x=1122.44 / 1707 * self.width, y=362.58 / 1067 * self.height,
                               anchor="nw")
+        self.last_name_entry.configure(state="readonly")
 
-        username_entry = ctk.CTkEntry(self.master, width=357.85 / 1707 * self.width,
+        self.account_username = ctk.StringVar()
+        self.account_username.set(self.user_info["username"])
+        self.username_entry = ctk.CTkEntry(self.master, width=357.85 / 1707 * self.width,
                                                 height=56.69 / 1067 * self.height,
                                                 bg_color="white",
                                                 fg_color="#D9D9D9",
                                                 border_color="#D9D9D9",
                                                 text_color="black",
-                                                font=("Poppins Light", 24))
-        username_entry.place(x=704.58 / 1707 * self.width, y=500.77 / 1067 * self.height,
+                                                font=("Poppins Light", 24),
+                                                textvariable=self.account_username
+                                                )
+        self.username_entry.place(x=704.58 / 1707 * self.width, y=500.77 / 1067 * self.height,
                              anchor="nw")
+        self.username_entry.configure(state="readonly")
 
-        email_entry = ctk.CTkEntry(self.master, width=357.85 / 1707 * self.width,
+        self.email = ctk.StringVar()
+        self.email.set(self.user_info["email"])
+        self.email_entry = ctk.CTkEntry(self.master, width=357.85 / 1707 * self.width,
                                              height=56.69 / 1067 * self.height,
                                              bg_color="white",
                                              fg_color="#D9D9D9",
                                              border_color="#D9D9D9",
                                              text_color="black",
-                                             font=("Poppins Light", 24))
-        email_entry.place(x=704.58 / 1707 * self.width, y=638.95 / 1067 * self.height,
+                                             font=("Poppins Light", 24),
+                                             textvariable=self.email
+                                             )
+        self.email_entry.place(x=704.58 / 1707 * self.width, y=638.95 / 1067 * self.height,
                           anchor="nw")
+
+        self.email_entry.configure(state="readonly")
 
         back_btn = ctk.CTkButton(self.master, width=176.7 / 1707 * self.width,
                                            height=75 / 1067 * self.height, bg_color="white",
@@ -672,5 +681,61 @@ class App:
         edit_btn = ctk.CTkButton(self.master, width=176.7 / 1707 * self.width,
                                            height=75 / 1067 * self.height, bg_color="white",
                                            fg_color="#1572D3", text="Edit", text_color="white",
-                                           font=("Poppins Light", 24))
+                                           font=("Poppins Light", 24),command=self.enable_edit)
         edit_btn.place(x=1340 / 1707 * self.width, y=690 / 1067 * self.height, anchor="nw")
+
+
+
+    def enable_edit(self):
+        self.first_name_entry.configure(state="normal")
+        self.last_name_entry.configure(state="normal")
+        self.username_entry.configure(state="normal")
+        self.email_entry.configure(state="normal")
+
+        self.finish_btn = ctk.CTkButton(self.master, width=176.7 / 1707 * self.width,
+                                 height=75 / 1067 * self.height, bg_color="white",
+                                 fg_color="#1572D3", text="Done", text_color="white",
+                                 font=("Poppins Light", 24), command=self.disable_edit)
+        self.finish_btn.place(x=1150 / 1707 * self.width, y=690 / 1067 * self.height, anchor="nw")
+
+    def disable_edit(self):
+        self.user_info["first name"] = self.first_name.get()
+        self.user_info["last name"] = self.last_name.get()
+        self.user_info["email"] = self.email.get()
+
+        result = self.db_find_user(self.account_username.get())
+        username_changed = self.user_info["username"]!=self.account_username.get()
+        self.user_info["username"] = self.account_username.get()
+        # check if all the details entered are valid or not
+        error = ""
+
+        valid_email = re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', self.user_info["email"])
+        if len(self.user_info["username"]) < 8:
+            error = "Username must be 8 characters minimum"
+        elif len(result) and username_changed:
+            error = "Username taken"
+        elif not valid_email:
+            error = "Email is invalid"
+
+        if error:
+            messagebox.showerror("Error", error)
+        else:
+            self.first_name_entry.configure(state="readonly")
+            self.last_name_entry.configure(state="readonly")
+            self.username_entry.configure(state="readonly")
+            self.email_entry.configure(state="readonly")
+
+            self.finish_btn.destroy()
+            self.cursor.execute(
+                '''
+                UPDATE USERS
+                SET FIRST_NAME = ?, LAST_NAME = ?, USERNAME = ?, EMAIL = ?
+                WHERE USER_ID =  ?;
+                ''',
+                (self.user_info["first name"],
+                 self.user_info["last name"],
+                 self.user_info["username"],
+                 self.user_info["email"],
+                 self.user_info["id"]
+                 ))
+            self.sqliteConnection.commit()
