@@ -346,7 +346,8 @@ class App:
             font=("Poppins Medium", 14),
             bg_color="#FFFFFF",
             fg_color="#1572D3",
-            text_color="white"
+            text_color="white",
+            command=self.user_account
         )
         account_button.place(x=1210/1536*self.width, y=441/864*self.height, anchor="nw")
 
@@ -611,3 +612,65 @@ class App:
                 self.search_options = {"capacity": "any", "manufacturer year": "any", "transmission": "any", "price": "any"}
 
         if not disable: self.rental_page(self.search_options)
+        
+    def user_account(self):
+        user_account_ui = ctk.CTkImage(light_image=img.open("assets/user account ui.png"),
+                                                 size=(self.width, self.height - 68))
+        user_account_ui_label = ctk.CTkLabel(self.master, image=user_account_ui, text="")
+        user_account_ui_label.place(x=0, y=0, anchor="nw")
+
+        first_name_entry = ctk.CTkEntry(
+            self.master,
+            width=357.85 / 1707 * self.width,
+            height=56.69 / 1067 * self.height,
+            bg_color="white",
+            fg_color="#D9D9D9",
+            border_color="#D9D9D9",
+            text_color="black",
+            font=("Poppins Light", 24))
+        first_name_entry.place(x=704.58 / 1707 * self.width, y=362.58 / 1067 * self.height,
+                               anchor="nw")
+
+        last_name_entry = ctk.CTkEntry(self.master, width=357.85 / 1707 * self.width,
+                                                 height=56.69 / 1067 * self.height,
+                                                 bg_color="white",
+                                                 fg_color="#D9D9D9",
+                                                 border_color="#D9D9D9",
+                                                 text_color="black",
+                                                 font=("Poppins Light", 24))
+        last_name_entry.place(x=1122.44 / 1707 * self.width, y=362.58 / 1067 * self.height,
+                              anchor="nw")
+
+        username_entry = ctk.CTkEntry(self.master, width=357.85 / 1707 * self.width,
+                                                height=56.69 / 1067 * self.height,
+                                                bg_color="white",
+                                                fg_color="#D9D9D9",
+                                                border_color="#D9D9D9",
+                                                text_color="black",
+                                                font=("Poppins Light", 24))
+        username_entry.place(x=704.58 / 1707 * self.width, y=500.77 / 1067 * self.height,
+                             anchor="nw")
+
+        email_entry = ctk.CTkEntry(self.master, width=357.85 / 1707 * self.width,
+                                             height=56.69 / 1067 * self.height,
+                                             bg_color="white",
+                                             fg_color="#D9D9D9",
+                                             border_color="#D9D9D9",
+                                             text_color="black",
+                                             font=("Poppins Light", 24))
+        email_entry.place(x=704.58 / 1707 * self.width, y=638.95 / 1067 * self.height,
+                          anchor="nw")
+
+        back_btn = ctk.CTkButton(self.master, width=176.7 / 1707 * self.width,
+                                           height=75 / 1067 * self.height, bg_color="white",
+                                           fg_color="#1572D3", text="Back", text_color="white",
+                                           font=("Poppins Light", 24),
+                                            command=self.home_page)
+        back_btn.place(x=81.13 / 1707 * self.width, y=891.25 / 1067 * self.height,
+                       anchor="nw")
+
+        edit_btn = ctk.CTkButton(self.master, width=176.7 / 1707 * self.width,
+                                           height=75 / 1067 * self.height, bg_color="white",
+                                           fg_color="#1572D3", text="Edit", text_color="white",
+                                           font=("Poppins Light", 24))
+        edit_btn.place(x=1340 / 1707 * self.width, y=690 / 1067 * self.height, anchor="nw")

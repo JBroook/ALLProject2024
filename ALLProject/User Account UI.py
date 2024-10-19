@@ -50,6 +50,6 @@ back_btn=customtkinter.CTkButton(root,width=176.7/1707*root.winfo_screenwidth(),
 back_btn.place(x=81.13/1707*root.winfo_screenwidth(),y=891.25/1067*root.winfo_screenheight(),anchor="nw")
 
 edit_btn=customtkinter.CTkButton(root,width=176.7/1707*root.winfo_screenwidth(),height=75/1067*root.winfo_screenheight(),bg_color="white",fg_color="#1572D3",text="Edit",text_color="white",font=("Poppins Light",24))
-edit_btn.place(x=1350/1707*root.winfo_screenwidth(),y=720/1067*root.winfo_screenheight(),anchor="nw")
+edit_btn.place(x=1340/1707*root.winfo_screenwidth(),y=690/1067*root.winfo_screenheight(),anchor="nw")
 
 root.mainloop()
