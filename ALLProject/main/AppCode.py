@@ -353,7 +353,8 @@ class App:
             font=("Poppins Medium", 14),
             bg_color="#FFFFFF",
             fg_color="#1572D3",
-            text_color="white"
+            text_color="white",
+            command=self.bookings_page
         )
         book_button.place(x=1210/1536*self.width, y=673/864*self.height, anchor="nw")
 
@@ -929,7 +930,7 @@ class App:
                                  height=47 / 864 * self.height, bg_color="white",
                                  fg_color="#1572D3", text="Back", text_color="white",
                                  font=("Poppins Medium", 24),
-                                 command=self.rental_page)
+                                 command=self.bookings_page)
         back_btn.place(x=55 / 1536 * self.width, y=717 / 864 * self.height,
                        anchor="nw")
 
@@ -1009,5 +1010,35 @@ class App:
 
             slot_frame.pack()
 
-    # def bookings_page(self):
-        
+    def bookings_page(self):
+        # Background Image
+        background_image = ctk.CTkImage(img.open("assets/Booking_Status.png"),
+                                                  size=(self.width, self.height - 64))
+        background_image_label = ctk.CTkLabel(master=self.master.master, image=background_image, text="")
+        background_image_label.place(relx=0, rely=0)
+
+        # Current Booking
+        current_button = ctk.CTkButton(self.master, text="Current Booking", bg_color="white",
+                                                 fg_color="#1572D3", text_color="white",
+                                                 border_color="#1572D3", width=775 / 1280 * self.width,
+                                                 height=88 / 720 * self.height, font=("Poppins Medium", 18)
+
+                                       )
+        current_button.place(x=230 / 1280 * self.width, y=240 / 720 * self.height)
+
+        # Past Booking
+        past_button = ctk.CTkButton(self.master, text="Past Booking", bg_color="white", fg_color="#1572D3",
+                                              text_color="white",
+                                              border_color="#1572D3", width=775 / 1280 * self.width,
+                                              height=88 / 720 * self.height, font=("Poppins Medium", 18),command=self.past_rentals)
+        past_button.place(x=230 / 1280 * self.width, y=387 / 720 * self.height)
+
+        # Back Button
+        back_button = ctk.CTkButton(
+            self.master, text="Back", bg_color="white", fg_color="#1572D3",
+            text_color="white",
+            border_color="#1572D3", width=89 / 1280 * self.width,
+            height=39 / 720 * self.height, font=("Poppins Medium", 18),
+            command=self.home_page
+        )
+        back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
