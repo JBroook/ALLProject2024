@@ -1,11 +1,10 @@
-from tkinter import *
+import sqlite3 as sql
+import AppCode
+import customtkinter as ctk
+import CarData
 
-root = Tk()
-root.title("Car Rental App")
-width = root.winfo_screenwidth()
-height = root.winfo_screenheight()
-root.geometry("%dx%d" % (width, height))
-root.state("zoomed")
+root = ctk.CTk()
 
+app = AppCode.App(root)
 
 root.mainloop()
