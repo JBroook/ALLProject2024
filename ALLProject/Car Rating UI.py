@@ -10,7 +10,7 @@ rate_booking_ui_label.place(x=0,y=0,anchor="nw")
 
 booking=[0,"20-10-2024","25-10-2024","George Town","Perodua Axia","Project Images/PeroduaAxia.jpg"]
 
-car_name=customtkinter.CTkLabel(root2,width=333/1707*root2.winfo_screenwidth(),height=49.66/1067*root2.winfo_screenheight(),fg_color="#FFFFFF",bg_color="#FFFFFF",text=booking[4],text_color="#000000",font=("Poppins",48))
+car_name=customtkinter.CTkLabel(root2,width=333/1707*root2.winfo_screenwidth(),height=49.66/1067*root2.winfo_screenheight(),fg_color="#FFFFFF",bg_color="#FFFFFF",text=booking[4],text_color="#000000",font=("Poppins Light",48))
 car_name.place(x=380/1707*root2.winfo_screenwidth(),y=250.6/1067*root2.winfo_screenheight(),anchor="nw")
 
 car_picture=customtkinter.CTkImage(light_image=Image.open(booking[5]),size=(580.22/1707*root2.winfo_screenwidth(),307.49/1067*root2.winfo_screenheight()))
