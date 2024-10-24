@@ -1008,3 +1008,6 @@ class App:
                 view_button.place(x=715,y=145)
 
             slot_frame.pack()
+
+    def bookings_page(self):
+        
