@@ -13,7 +13,7 @@ background_image_label.place(relx=0, rely=0)
 
 #Current Booking
 current_button = customtkinter.CTkButton(root,text = "Current Booking" ,bg_color= "white", fg_color="#1572D3",text_color="white",
-            border_color="#1572D3", width=775, height=88, font=("Poppins Medium",18))
+            border_color="#1572D3", width=  775, height=88, font=("Poppins Medium",18))
 current_button.place(x=230/1280*root.winfo_screenwidth(),y=240/720*root.winfo_screenheight())
 
 #Past Booking
