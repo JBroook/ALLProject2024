@@ -1009,5 +1009,5 @@ class App:
 
             slot_frame.pack()
 
-    def bookings_page(self):
+    # def bookings_page(self):
         
