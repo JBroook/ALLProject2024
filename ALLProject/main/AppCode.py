@@ -1,6 +1,6 @@
+from ftplib import all_errors
 from tkinter import messagebox
 import sqlite3 as sql
-from tokenize import String
 
 import customtkinter as ctk
 from PIL import Image as img
@@ -9,6 +9,7 @@ import smtplib,ssl
 from email.message import EmailMessage
 import string, random
 import pyglet
+from tkcalendar import Calendar
 
 pyglet.font.add_file("assets/fonts/Poppins-SemiBold.ttf")
 pyglet.font.add_file("assets/fonts/Poppins-Light.ttf")
@@ -51,6 +52,7 @@ class App:
         self.height = self.master.winfo_screenheight()
 
         # ui definitions
+        self.pickup_location_list = ["Pantai Jerejak","Batu Ferringhi","Georgetown","Bayan Lepas","Bayan Baru","Gelugor","Air Itam"]
         self.manu_year = ctk.StringVar()
         self.user_info = {
             "first name" : "Default",
@@ -65,6 +67,7 @@ class App:
             "transmission": "any",
             "price": "any"
         }
+        self.current_calendar = "pickup"
 
         #database stuff
         self.sqliteConnection = sql.connect("DriveEase.db")
@@ -91,6 +94,9 @@ class App:
 
         self.sqliteConnection.commit()
         self.master.bind("<KeyRelease>", self.login_enter)
+        self.master.bind("<<CalendarSelected>>",lambda x : self.set_calendar("change",x))
+        # self.cursor.execute("SELECT * FROM CARS WHERE CAR_ID = 1")
+        # self.rental_details(self.cursor.fetchall()[0])
         self.login()
 
     def login(self):
@@ -571,9 +577,12 @@ class App:
                 border_color="#1572D3",
                 width=137,
                 height=38,
-                font=("Poppins Medium", 14)
+                font=("Poppins Medium", 14),
+                command=lambda car_deets=car : self.rental_details(car_deets)
             )
+
             rentButton.place(x=708, y=166, anchor="nw")
+            i+=1
 
     def set_search_option(self,option):
         disable = False
@@ -584,7 +593,7 @@ class App:
                 self.search_options["capacity"] = 7
             case "Manufacturer Year":
                 self.search_options["manufacturer year"] = self.manu_year.get()
-                if len(self.manu_year.get())==4:
+                if len(self.manu_year.get())!=4:
                     disable = True
             case "Auto":
                 self.search_options["transmission"]  = "auto"
@@ -600,12 +609,23 @@ class App:
                 self.search_options = {"capacity": "any", "manufacturer year": "any", "transmission": "any", "price": "any"}
 
         if not disable: self.rental_page(self.search_options)
-        
+
     def user_account(self):
+        for i in self.master.winfo_children():
+            i.destroy()
+
         user_account_ui = ctk.CTkImage(light_image=img.open("assets/user account ui.png"),
-                                                 size=(self.width, self.height - 68))
+                                         size=(self.width, self.height - 68))
         user_account_ui_label = ctk.CTkLabel(self.master, image=user_account_ui, text="")
         user_account_ui_label.place(x=0, y=0, anchor="nw")
+
+        #welcome message
+        name_label = ctk.CTkLabel(
+            self.master,text=self.user_info["first name"]+" "+self.user_info["last name"],
+            font=("Poppins Regular",36),
+            bg_color="white",fg_color="white",text_color="#1572D3"
+        )
+        name_label.place(x=200,y=550)
 
         self.first_name = ctk.StringVar()
         self.first_name.set(self.user_info["first name"])
@@ -739,3 +759,252 @@ class App:
                  self.user_info["id"]
                  ))
             self.sqliteConnection.commit()
+
+    def rental_details(self, car_array):
+        for i in self.master.winfo_children():
+            i.destroy()
+
+        rental_details_ui = ctk.CTkImage(light_image=img.open("assets/rental details ui.png"),
+                                       size=(self.width, self.height - 68))
+        rental_details_ui_label = ctk.CTkLabel(self.master, image=rental_details_ui, text="")
+        rental_details_ui_label.place(x=0, y=0, anchor="nw")
+
+        pil_image = img.open("assets/cars/"+car_array[4])
+        car_image = ctk.CTkImage(light_image=pil_image,
+                                         size=(600, round(600*pil_image.size[1]/pil_image.size[0])))
+        car_image_label = ctk.CTkLabel(self.master, image=car_image, text="",fg_color="white")
+        car_image_label.place(x=55, y=300, anchor="nw")
+
+        #car details
+        #capacity
+        capacity_label = ctk.CTkLabel(
+            master=self.master,
+            text=str(car_array[5])+" Passengers",
+            font=("Poppins Regular",32),
+            text_color="#959595",
+            fg_color="white"
+        )
+        capacity_label.place(x=897,y=162,anchor="nw")
+        # transmission
+        transmission_label = ctk.CTkLabel(
+            master=self.master,
+            text=car_array[7],
+            font=("Poppins Regular", 32),
+            text_color="#959595",
+            fg_color="white"
+        )
+        transmission_label.place(x=1212, y=162, anchor="nw")
+        # manufacturer year
+        manu_year_label = ctk.CTkLabel(
+            master=self.master,
+            text=car_array[1],
+            font=("Poppins Regular", 32),
+            text_color="#959595",
+            fg_color="white"
+        )
+        manu_year_label.place(x=897, y=222, anchor="nw")
+        # price
+        price_label = ctk.CTkLabel(
+            master=self.master,
+            text="$"+str(car_array[3]),
+            font=("Poppins Semibold", 32),
+            text_color="black",
+            fg_color="white"
+        )
+        price_label.place(x=1290, y=222, anchor="nw")
+        #name
+        name_label = ctk.CTkLabel(
+            master=self.master,
+            text=car_array[2],
+            font=("Poppins Medium", 64),
+            text_color="black",
+            fg_color="white"
+        )
+        name_label.place(x=858, y=60, anchor="nw")
+
+        #pick up location
+        pickup_location = ctk.CTkComboBox(
+            self.master,
+            width=263,height=41,
+            values=self.pickup_location_list,
+            bg_color="white",
+            fg_color="#D9D9D9",
+            border_color="white",
+            button_color="#D9D9D9",
+            text_color="black",
+            font=("Poppins Medium",16),
+            dropdown_font=("Poppins Medium",16)
+        )
+        pickup_location.place(x=1026,y=358,anchor="nw")
+
+        #pick up date
+        self.pickup_date = ctk.CTkButton(
+            self.master,text="",
+            bg_color="white",fg_color="#D9D9D9",hover_color="#B6B6B6",text_color="black",
+            font=("Poppins Medium",16),
+            anchor="w",
+            width=263,height=41,
+            command=lambda : self.set_calendar("create pickup")
+        )
+        self.pickup_date.place(x=1028,y=451,anchor="nw")
+
+        # return date
+        self.return_date = ctk.CTkButton(
+            self.master, text="",
+            bg_color="white", fg_color="#D9D9D9", hover_color="#B6B6B6", text_color="black",
+            font=("Poppins Medium", 16),
+            anchor="w",
+            width=263, height=41,
+            command=lambda: self.set_calendar("create return")
+        )
+        self.return_date.place(x=1028, y=550, anchor="nw")
+
+
+        #confirm button
+        confirm_btn = ctk.CTkButton(self.master, width=170 / 1536 * self.width,
+                                 height=54 / 864 * self.height, bg_color="white",
+                                 fg_color="#1572D3", text="Confirm", text_color="white",
+                                 font=("Poppins Light", 24),
+                                 command=lambda : messagebox.showinfo("Booking made","Your booking is made\nPlease await approval"))
+        confirm_btn.place(x=1065 / 1536 * self.width, y=642 / 864 * self.height,
+                       anchor="nw")
+        #back button
+        back_btn = ctk.CTkButton(self.master, width=105 / 1536 * self.width,
+                                 height=47 / 864 * self.height, bg_color="white",
+                                 fg_color="#1572D3", text="Back", text_color="white",
+                                 font=("Poppins Light", 24),
+                                 command=self.rental_page)
+        back_btn.place(x=55 / 1536 * self.width, y=717 / 864 * self.height,
+                       anchor="nw")
+
+    def set_calendar(self, code, event=None):
+        match code:
+            case "create pickup":
+                self.return_date.configure(state="disabled")
+                self.current_calendar = "pickup"
+                self.pickup_date_calendar = Calendar(
+                    self.master, selectmode='day',
+                    showweeknumbers=False, cursor="hand2", date_pattern='dd-mm-y',
+                    borderwidth=0, bordercolor='white',
+                    font="Poppins 16"
+                )
+                self.pickup_date_calendar.place(x=1300, y=600, anchor="nw")
+            case "create return":
+                self.pickup_date.configure(state="disabled")
+                self.current_calendar = "return"
+                self.return_date_calendar = Calendar(
+                    self.master, selectmode='day',
+                    showweeknumbers=False, cursor="hand2", date_pattern='dd-mm-y',
+                    borderwidth=0, bordercolor='white',
+                    font="Poppins 16"
+                )
+                self.return_date_calendar.place(x=1300, y=700, anchor="nw")
+            case "change":
+                if self.current_calendar=="pickup":
+                    self.pickup_date.configure(text=self.pickup_date_calendar.get_date())
+                    self.pickup_date_calendar.destroy()
+                    self.return_date.configure(state="normal")
+                else:
+                    self.return_date.configure(text=self.return_date_calendar.get_date())
+                    self.return_date_calendar.destroy()
+                    self.pickup_date.configure(state="normal")
+
+    def past_rentals(self):
+        for i in self.master.winfo_children():
+            i.destroy()
+        # bg image
+        past_rentals_ui = ctk.CTkImage(light_image=img.open("assets/past booking ui.png"), size=(self.width, self.height-71))
+        past_rentals_ui_label = ctk.CTkLabel(master=self.master, image=past_rentals_ui, text="")
+        past_rentals_ui_label.place(relx=0, rely=0, anchor="nw")
+
+        rentals_frame = ctk.CTkScrollableFrame(
+            self.master,
+            bg_color="white",fg_color="white",
+            width=900,height=550
+        )
+        rentals_frame.place(x=298,y=149,anchor="nw")
+
+        #back button
+        back_btn = ctk.CTkButton(self.master, width=105 / 1536 * self.width,
+                                 height=47 / 864 * self.height, bg_color="white",
+                                 fg_color="#1572D3", text="Back", text_color="white",
+                                 font=("Poppins Medium", 24),
+                                 command=self.rental_page)
+        back_btn.place(x=55 / 1536 * self.width, y=717 / 864 * self.height,
+                       anchor="nw")
+
+        self.cursor.execute("SELECT * FROM BOOKINGS INNER JOIN CARS ON BOOKINGS.CAR_ID = CARS.CAR_ID")
+        booking_list = self.cursor.fetchall()
+
+        for all_details in booking_list:
+            booking = all_details[0:6]
+            car = all_details[6:14]
+
+            slot_frame = ctk.CTkFrame(
+                rentals_frame,width=895,height=240,
+                bg_color="white",fg_color="white"
+            )
+            #image
+            img_string = "assets/past booking slot frame rated.png" if booking[4]!=-1 else "assets/past booking slot frame.png"
+            slot_image = ctk.CTkImage(light_image=img.open(img_string),
+                                           size=(895,240))
+            slot_image_label = ctk.CTkLabel(
+                master=slot_frame, image=slot_image, text="",
+                bg_color="white"
+            )
+            slot_image_label.place(x=0, y=0, anchor="nw")
+
+            # car image
+            pil_image = img.open("assets/cars/" + car[4])
+            car_image = ctk.CTkImage(light_image=img.open("assets/cars/" + car[4]),
+                                     size=(272, round(272 * pil_image.size[1] / pil_image.size[0])))
+            car_image_label = ctk.CTkLabel(master=slot_frame, image=car_image, text="")
+            car_image_label.place(x=30, y=56, anchor="nw")
+            #start and end date
+            start_label = ctk.CTkLabel(
+                master=slot_frame,text=booking[1],
+                bg_color="white",fg_color="white",text_color="#747474",
+                font=("Poppins Regular",20)
+            )
+            start_label.place(x=432,y=70)
+            end_label = ctk.CTkLabel(
+                master=slot_frame, text=booking[2],
+                bg_color="white", fg_color="white", text_color="#747474",
+                font=("Poppins Regular", 20)
+            )
+            end_label.place(x=432, y=97)
+            #location
+            location_label = ctk.CTkLabel(
+                master=slot_frame, text=booking[3],
+                bg_color="white", fg_color="white", text_color="#747474",
+                font=("Poppins Regular", 20)
+            )
+            location_label.place(x=370, y=138)
+
+            # car name
+            car_name = ctk.CTkLabel(master=slot_frame, text=car[2], font=("Poppins Medium", 32), text_color="black")
+            car_name.place(x=325, y=20)
+
+            #rating/ratings button
+            if booking[4]==-1:
+                rate_button = ctk.CTkButton(
+                    slot_frame,text="Rate",width=105,height=47,
+                    font=("Poppins Medium",16),
+                    bg_color="white",fg_color="#1572D3",text_color="white"
+                )
+                rate_button.place(x=705,y=120)
+            else:
+                rating_label = ctk.CTkLabel(
+                    slot_frame,text=booking[4],
+                    font=("Poppins Medium",64),
+                    bg_color="white",fg_color="white",text_color="black"
+                )
+                rating_label.place(x=715,y=60)
+                view_button = ctk.CTkButton(
+                    slot_frame,text="View",
+                    bg_color="white",fg_color="#1572D3",text_color="white",
+                    width=105,height=47,font=("Poppins Medium",16)
+                )
+                view_button.place(x=715,y=145)
+
+            slot_frame.pack()

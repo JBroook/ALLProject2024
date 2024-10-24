@@ -18,6 +18,17 @@ cursor.execute(
     )
     '''
 )
+conn.commit()
+cursor.execute('''CREATE TABLE IF NOT EXISTS BOOKINGS (
+        BOOKING_ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        START_DATE VARCHAR(255) NOT NULL,
+        END_DATE VARCHAR(255) NOT NULL,
+        LOCATION VARCHAR(255) NOT NULL,
+        RATING INTEGER NOT NULL,
+        CAR_ID INTEGER NOT NULL,
+        FOREIGN KEY (CAR_ID) REFERENCES CARS(CAR_ID)
+    )''')
+conn.commit()
 
 car_list = [
     {
@@ -27,7 +38,7 @@ car_list = [
         "image" : "honda accord.png",
         "capacity" : 5,
         "rating" : 4.5,
-        "transmission" : "auto"
+        "transmission" : "Auto"
     },
 
     {
@@ -37,7 +48,7 @@ car_list = [
         "image" : "honda city.png",
         "capacity" : 5,
         "rating" : 4.8,
-        "transmission" : "auto"
+        "transmission" : "Auto"
     },
 
     {
@@ -47,7 +58,7 @@ car_list = [
         "image" : "honda civic.png",
         "capacity" : 5,
         "rating" : 3.9,
-        "transmission" : "manual"
+        "transmission" : "Manual"
     },
     {
         "manufacturer_year" : 2022,
@@ -56,7 +67,7 @@ car_list = [
         "image" : "hyundai sonata.png",
         "capacity" : 5,
         "rating" : 4.2,
-        "transmission" : "manual"
+        "transmission" : "Manual"
     },
     {
         "manufacturer_year" : 2018,
@@ -65,7 +76,7 @@ car_list = [
         "image" : "nissan serena.png",
         "capacity" : 7,
         "rating" : 4.9,
-        "transmission" : "auto"
+        "transmission" : "Auto"
     },
     {
         "manufacturer_year" : 2012,
@@ -74,7 +85,7 @@ car_list = [
         "image" : "perodua myvi.png",
         "capacity" : 5,
         "rating" : 4.8,
-        "transmission" : "auto"
+        "transmission" : "Auto"
     }
 ]
 
