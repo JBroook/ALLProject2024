@@ -49,28 +49,33 @@ background_image_label = customtkinter.CTkLabel(master=root.master, image=backgr
 background_image_label.place(relx=0, rely=0)
 
 #Cardholder's Name
-name_entry = customtkinter.CTkEntry(root, placeholder_text="Alice Tan Wong", width=320, height=34, bg_color="white",
+name_entry = customtkinter.CTkEntry(root, placeholder_text="Alice Tan Wong", width=320/1280*root.winfo_screenwidth(),
+                                    height=34/720*root.winfo_screenheight(), bg_color="white",
                                      fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black")
 name_entry.place(x=451/1280*root.winfo_screenwidth(),y=240/720*root.winfo_screenheight())
 
 #Card Number
-number_entry = customtkinter.CTkEntry(root, placeholder_text="1234 5678 9012 3456", width=320, height=34, bg_color="white",
+number_entry = customtkinter.CTkEntry(root, placeholder_text="1234 5678 9012 3456", width=320/1280*root.winfo_screenwidth(),
+                                      height=34/720*root.winfo_screenheight(), bg_color="white",
                                      fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black")
 number_entry.place(x=451/1280*root.winfo_screenwidth(),y=320/720*root.winfo_screenheight())
 
 #Expiry Date
-expiry_entry = customtkinter.CTkEntry(root, placeholder_text="01/24", width=159, height=34, bg_color="white",
+expiry_entry = customtkinter.CTkEntry(root, placeholder_text="01/24", width=159/1280*root.winfo_screenwidth(),
+                                      height=34/720*root.winfo_screenheight(), bg_color="white",
                                      fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black")
 expiry_entry.place(x=451/1280*root.winfo_screenwidth(),y=400/720*root.winfo_screenheight())
 
 #CVC
-cvc_entry = customtkinter.CTkEntry(root, placeholder_text="* * *", width=122, height=34, bg_color="white",
+cvc_entry = customtkinter.CTkEntry(root, placeholder_text="* * *", width=122/1280*root.winfo_screenwidth(),
+                                   height=34/720*root.winfo_screenheight(), bg_color="white",
                                      fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black")
 cvc_entry.place(x=650/1280*root.winfo_screenwidth(),y=400/720*root.winfo_screenheight())
 
 #Pay Button
 confirm_button = customtkinter.CTkButton(root,text = "Pay" ,bg_color= "white", fg_color="Green",text_color="white",
-            border_color="#1572D3", width=89, height=39, font=("Poppins Medium",18), command = lambda:pay())
+            border_color="#1572D3", width=89/1280*root.winfo_screenwidth(),
+                                         height=39/720*root.winfo_screenheight(), font=("Poppins Medium",18), command = lambda:pay())
 confirm_button.place(x=450/1280*root.winfo_screenwidth(),y=512/720*root.winfo_screenheight())
 
 #Destroy Window
@@ -80,7 +85,8 @@ def destroy():
 
 #Back Button
 back_button = customtkinter.CTkButton(root,text = "Back" ,bg_color= "white", fg_color="#1572D3",text_color="white",
-            border_color="#1572D3", width=89, height=39, font=("Poppins Medium",18), command = destroy)
+            border_color="#1572D3", width=89/1280*root.winfo_screenwidth(),
+                                      height=39/720*root.winfo_screenheight(), font=("Poppins Medium",18), command = destroy)
 back_button.place(x=45/1280*root.winfo_screenwidth(),y=588/720*root.winfo_screenheight())
 
 root.mainloop()
