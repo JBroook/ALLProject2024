@@ -1050,3 +1050,71 @@ class App:
         past_rentals_ui = ctk.CTkImage(light_image=img.open("assets/performance report ui.png"), size=(self.width, self.height-71))
         past_rentals_ui_label = ctk.CTkLabel(master=self.master, image=past_rentals_ui, text="")
         past_rentals_ui_label.place(relx=0, rely=0, anchor="nw")
+
+        #get performance info
+        # self.cursor.execute("SELECT TOTAL_PRICE FROM BOOKINGS WHERE ")
+        # today_income = self.cursor.fetchall()
+        today_income = 2200
+
+        today_income_label = ctk.CTkLabel(
+            self.master,text=f"RM{today_income:.2f}",
+            bg_color="white",fg_color="white",text_color="black",
+            font=("Poppins Medium",36)
+        )
+        today_income_label.place(x=88,y=240)
+
+        week_income = 2500
+        week_income_label = ctk.CTkLabel(
+            self.master,text=f"RM{week_income:.2f}",
+            bg_color="white",fg_color="white",text_color="#656565",
+            font=("Poppins Medium",24)
+        )
+        week_income_label.place(x=352,y=306)
+
+        review_average = 4.65
+        review_average_label = ctk.CTkLabel(
+            self.master,text=f"{review_average:.2f}",
+            bg_color="white",fg_color="white",text_color="black",
+            font=("Poppins Medium",36)
+        )
+        review_average_label.place(x=92,y=520)
+
+        review_count = 10
+        review_count_label = ctk.CTkLabel(
+            self.master, text=f"{review_count}",
+            bg_color="white", fg_color="white", text_color="#656565",
+            font=("Poppins Medium", 24)
+        )
+        review_count_label.place(x=457,y=585)
+
+        user_count = 12
+        user_count_label = ctk.CTkLabel(
+            self.master, text=f"{user_count}",
+            bg_color="white", fg_color="white", text_color="black",
+            font=("Poppins Medium", 36)
+        )
+        user_count_label.place(x=596, y=240)
+
+        text_list = ["Past Day","Past Week","Past Month","Past Year"]
+        for i in range(4):
+            button = ctk.CTkButton(
+                self.master,text=text_list[i],
+                bg_color="white",fg_color="#1572D3",text_color="white",
+                width=185,height=169,
+                font=("Poppins Medium",20)#,command=lambda :
+            )
+            button.place(x=1035+208*(i%2),y=258+189*(i>1))
+
+            # Back Button
+            back_button = ctk.CTkButton(
+                self.master, text="Back", bg_color="white", fg_color="#1572D3",
+                text_color="white",
+                border_color="#1572D3", width=89 / 1280 * self.width,
+                height=39 / 720 * self.height, font=("Poppins Medium", 18),
+                command=self.home_page
+            )
+            back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
+
+
+def print_pdf(self,time_option):
+        print(time_option)
