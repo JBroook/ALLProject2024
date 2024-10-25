@@ -14,26 +14,29 @@ car_image_ph=customtkinter.CTkImage(light_image=Image.open(booking_page[2]),size
 car_image_ph_label=customtkinter.CTkLabel(root1,image=car_image_ph,text="")
 car_image_ph_label.place(x=333/1707*root1.winfo_screenwidth(),y=310/1067*root1.winfo_screenheight(),anchor="nw")
 
-car_name=customtkinter.CTkLabel(root1,width=442/1707*root1.winfo_screenwidth(),height=61/1067*root1.winfo_screenheight(),fg_color="#FFFFFF",bg_color="#FFFFFF",text=booking_page[1],text_color="#000000",font=("Poppins",30))
+car_name=customtkinter.CTkLabel(root1,width=442/1707*root1.winfo_screenwidth(),height=61/1067*root1.winfo_screenheight(),fg_color="#FFFFFF",bg_color="#FFFFFF",text=booking_page[1],text_color="#000000",font=("Poppins",32))
 car_name.place(x=1030/1707*root1.winfo_screenwidth(),y=240/1067*root1.winfo_screenheight(),anchor="nw")
 
 capacity=customtkinter.CTkLabel(root1,width=125/1707*root1.winfo_screenwidth(),height=39/1067*root1.winfo_screenheight(),fg_color="#FFFFFF",bg_color="#FFFFFF",text=booking_page[3],anchor="w",text_color="#747474",font=("Poppins Light",24))
-capacity.place(x=1100/1707*root1.winfo_screenwidth(),y=328/1067*root1.winfo_screenheight(),anchor="nw")
+capacity.place(x=1100/1707*root1.winfo_screenwidth(),y=333/1067*root1.winfo_screenheight(),anchor="nw")
 
 type=customtkinter.CTkLabel(root1,width=115/1707*root1.winfo_screenwidth(),height=39/1067*root1.winfo_screenheight(),fg_color="#FFFFFF",bg_color="#FFFFFF",text=booking_page[4],anchor="w",text_color="#747474",font=("Poppins Light",24))
-type.place(x=1350/1707*root1.winfo_screenwidth(),y=328/1067*root1.winfo_screenheight(),anchor="nw")
+type.place(x=1350/1707*root1.winfo_screenwidth(),y=333/1067*root1.winfo_screenheight(),anchor="nw")
 
 start_date=customtkinter.CTkLabel(root1,width=242/1707*root1.winfo_screenwidth(),height=35/1067*root1.winfo_screenheight(),fg_color="#FFFFFF",bg_color="#FFFFFF",text=booking_page[5],anchor="w",text_color="#747474",font=("Poppins Light",22))
-start_date.place(x=1191/1707*root1.winfo_screenwidth(),y=395/1067*root1.winfo_screenheight(),anchor="nw")
+start_date.place(x=1171/1707*root1.winfo_screenwidth(),y=395/1067*root1.winfo_screenheight(),anchor="nw")
 
 end_date=customtkinter.CTkLabel(root1,width=251/1707*root1.winfo_screenwidth(),height=35/1067*root1.winfo_screenheight(),fg_color="#FFFFFF",bg_color="#FFFFFF",text=booking_page[6],anchor="w",text_color="#747474",font=("Poppins Light",22))
-end_date.place(x=1182/1707*root1.winfo_screenwidth(),y=431/1067*root1.winfo_screenheight(),anchor="nw")
+end_date.place(x=1171/1707*root1.winfo_screenwidth(),y=431/1067*root1.winfo_screenheight(),anchor="nw")
 
 location=customtkinter.CTkLabel(root1,width=305/1707*root1.winfo_screenwidth(),height=39/1067*root1.winfo_screenheight(),fg_color="#FFFFFF",bg_color="#FFFFFF",text=booking_page[7],anchor="w",text_color="#747474",font=("Poppins Light",24))
 location.place(x=1098/1707*root1.winfo_screenwidth(),y=484/1067*root1.winfo_screenheight(),anchor="nw")
 
 price=customtkinter.CTkLabel(root1,width=264/1707*root1.winfo_screenwidth(),height=39/1067*root1.winfo_screenheight(),fg_color="#FFFFFF",bg_color="#FFFFFF",text=booking_page[8],anchor="w",text_color="#9C9C9C",font=("Poppins",24))
 price.place(x=1157/1707*root1.winfo_screenwidth(),y=552/1067*root1.winfo_screenheight(),anchor="nw")
+
+status_label=customtkinter.CTkLabel(root1,width=150/1707*root1.winfo_screenwidth(),height=54.4/1067*root1.winfo_screenheight(),fg_color="#FFFFFF",bg_color="#FFFFFF",text="Status:",text_color="#000000",font=("Poppins",36))
+status_label.place(x=400/1707*root1.winfo_screenwidth(),y=809/1067*root1.winfo_screenheight(),anchor="nw")
 
 status=customtkinter.CTkLabel(root1,width=307.46/1707*root1.winfo_screenwidth(),height=54/1067*root1.winfo_screenheight(),fg_color="#FFFFFF",bg_color="#FFFFFF",text=booking_page[9],text_color="#000000",font=("Poppins",30))
 status.place(x=566/1707*root1.winfo_screenwidth(),y=809/1067*root1.winfo_screenheight(),anchor="nw")
