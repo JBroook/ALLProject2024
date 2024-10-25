@@ -97,7 +97,7 @@ class App:
         self.master.bind("<<CalendarSelected>>",lambda x : self.set_calendar("change",x))
         # self.cursor.execute("SELECT * FROM CARS WHERE CAR_ID = 1")
         # self.rental_details(self.cursor.fetchall()[0])
-        self.login()
+        self.performance_report()
 
     def login(self):
         for i in self.master.winfo_children():
@@ -1042,3 +1042,11 @@ class App:
             command=self.home_page
         )
         back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
+
+    def performance_report(self):
+        for i in self.master.winfo_children():
+            i.destroy()
+        # bg image
+        past_rentals_ui = ctk.CTkImage(light_image=img.open("assets/performance report ui.png"), size=(self.width, self.height-71))
+        past_rentals_ui_label = ctk.CTkLabel(master=self.master, image=past_rentals_ui, text="")
+        past_rentals_ui_label.place(relx=0, rely=0, anchor="nw")
