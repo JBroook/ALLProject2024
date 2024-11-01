@@ -222,8 +222,13 @@ price_entry=customtkinter.CTkEntry(root3,width=363/1707*root3.winfo_screenwidth(
                                    font=("Poppins Light",24))
 price_entry.place(x=1041/1707*root3.winfo_screenwidth(),y=371/1067*root3.winfo_screenheight(),anchor="nw")
 
-image_display=customtkinter.CTkLabel(root3,width=494,height=358,text="",bg_color="#F0F4FC",fg_color="#FFFFFF",corner_radius=9)
-image_display.place(x=208,y=144,anchor="nw")
+image_display=customtkinter.CTkLabel(root3,width=494/1707*root3.winfo_screenwidth(),
+                                     height=358/1067*root3.winfo_screenheight(),
+                                     text="",
+                                     bg_color="#F0F4FC",
+                                     fg_color="#FFFFFF",
+                                     corner_radius=9)
+image_display.place(x=208/1707*root3.winfo_screenwidth(),y=144/1067*root3.winfo_screenheight(),anchor="nw")
 
 insert_image_btn=customtkinter.CTkButton(root3,width=208/1707*root3.winfo_screenwidth(),
                                          height=45.39/1067*root3.winfo_screenheight(),
