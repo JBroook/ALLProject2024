@@ -1,7 +1,7 @@
 import sqlite3 as sql
 import AppCode
 import customtkinter as ctk
-import CarData
+import Database
 
 root = ctk.CTk()
 

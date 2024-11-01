@@ -1,8 +1,10 @@
 import sqlite3 as sql
 
+
 conn = sql.connect("DriveEase.db")
 cursor = conn.cursor()
 
+#car stuff
 cursor.execute(
     '''
     CREATE TABLE IF NOT EXISTS CARS 
@@ -18,16 +20,6 @@ cursor.execute(
     )
     '''
 )
-conn.commit()
-cursor.execute('''CREATE TABLE IF NOT EXISTS BOOKINGS (
-        BOOKING_ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        START_DATE VARCHAR(10) NOT NULL,
-        END_DATE VARCHAR(10) NOT NULL,
-        LOCATION VARCHAR(255) NOT NULL,
-        RATING INTEGER NOT NULL,
-        CAR_ID INTEGER NOT NULL,
-        FOREIGN KEY (CAR_ID) REFERENCES CARS(CAR_ID)
-    )''')
 conn.commit()
 
 car_list = [
@@ -119,3 +111,42 @@ if len(result)==0:
         cursor.execute(query)
 
     conn.commit()
+
+
+#bookings stuff
+cursor.execute('''CREATE TABLE IF NOT EXISTS BOOKINGS (
+        BOOKING_ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        START_DATE VARCHAR(10) NOT NULL,
+        END_DATE VARCHAR(10) NOT NULL,
+        LOCATION VARCHAR(255) NOT NULL,
+        CAR_ID INTEGER NOT NULL,
+        USER_ID INTEGER NOT NULL,
+        CURRENT_BOOKING INTEGER NOT NULL,
+        STATUS VARCHAR(50) NOT NULL,
+        TOTAL_CHARGE INTEGER NOT NULL,
+        FOREIGN KEY (CAR_ID) REFERENCES CARS(CAR_ID),
+        FOREIGN KEY (USER_ID) REFERENCES USERS(USER_ID)
+    )''')
+conn.commit()
+
+#ratings stuff
+cursor.execute('''CREATE TABLE IF NOT EXISTS RATINGS (
+        RATING_ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        SCORE INTEGER NOT NULL,
+        REVIEW TEXT,
+        BOOKING_ID INTEGER NOT NULL,
+        FOREIGN KEY (BOOKING_ID) REFERENCES BOOKINGS(BOOKING_ID)
+    )''')
+conn.commit()
+
+#payment stuff
+cursor.execute('''CREATE TABLE IF NOT EXISTS PAYMENTS (
+        PAYMENT_ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        NAME VARCHAR(255) NOT NULL,
+        CARD_NUMBER VARCHAR(12) NOT NULL,
+        EXPIRY VARCHAR(4) NOT NULL,
+        CVC INTEGER NOT NULL,
+        BOOKING_ID INTEGER NOT NULL,
+        FOREIGN KEY (BOOKING_ID) REFERENCES BOOKINGS(BOOKING_ID)
+    )''')
+conn.commit()
