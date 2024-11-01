@@ -118,10 +118,19 @@ back_button = customtkinter.CTkButton(root,text = "Back" ,bg_color= "white", fg_
 back_button.place(x=46/1280*root.winfo_screenwidth(),y=588/720*root.winfo_screenheight())
 
 #Treeview
+
+def on_tree_select(event):
+    selected_item = treeview.selection()
+    if selected_item:
+        item_values = treeview.item(selected_item, "values")
+        print("Selected Booking:", item_values)
+
 style = ttk.Style()
-style.configure("Treeview.Heading", font=("Poppins Medium",18))
+style.theme_use("clam")
+style.configure("Treeview.Heading", font=("Poppins Medium",18),rowheight=100)
+style.configure("Treeview", font=("Poppins", 16),rowheight=40)
 treeview = ttk.Treeview(root, columns=("ID","Customer Name","Customer Contact","Model",
-                                       "Transmission", "Price", "Start Date","End Date", "Status"),
+                                        "Price", "Start Date","End Date", "Status"),
                         show="headings")
 
 treeview.heading("ID", text="ID")
@@ -136,9 +145,6 @@ treeview.column("Customer Contact", width=93, anchor="center")
 treeview.heading("Model", text="Model")
 treeview.column("Model", width=10, anchor="center")
 
-treeview.heading("Transmission", text="Transmission")
-treeview.column("Transmission", width=100, anchor="center")
-
 treeview.heading("Price", text="Price")
 treeview.column("Price", width=10, anchor="center")
 
@@ -152,6 +158,8 @@ treeview.heading("Status", text="Status")
 treeview.column("Status", width=20, anchor="center")
 
 treeview.place(x=310, y=578, width=1453/1280*root.winfo_screenwidth(), height=363/720*root.winfo_screenheight())
-treeview.bind("<<TreeviewSelect>>")
+# Binding the select event to a callback function
+treeview.bind("<<TreeviewSelect>>", on_tree_select)
+
 
 root.mainloop()
