@@ -19,7 +19,7 @@ def connect_db():
     cursor = conn.cursor()
     cursor.execute(''' 
         CREATE TABLE IF NOT EXISTS cars (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id INTEGER PRIMARY KEY,
             registration_number TEXT,
             model TEXT,
             capacity TEXT,
@@ -50,10 +50,14 @@ def save_data():
         conn.close()
         return
 
+    cursor.execute('SELECT MAX(id) FROM cars')
+    max_id = cursor.fetchone()[0]
+    next_id = 1 if max_id is None else max_id + 1
+
     cursor.execute(''' 
-        INSERT INTO cars (registration_number, model, capacity, transmission, manufacture_year, price, image_path)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', (registration_number, model, capacity, transmission, manufacture_year, price, image_path))
+        INSERT INTO cars (id, registration_number, model, capacity, transmission, manufacture_year, price, image_path)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (next_id, registration_number, model, capacity, transmission, manufacture_year, price, image_path))
     conn.commit()
     conn.close()
 
@@ -153,7 +157,7 @@ def select_item(event):
             price_entry.delete(0, 'end')
             price_entry.insert(0, car_data[6])
 
-            image_path = car_data[7]
+            image_path = car_data[7]  # Corrected index for image path
             if image_path:
                 upload_image()
 
@@ -289,12 +293,13 @@ back_btn=customtkinter.CTkButton(root3,width=150/1707*root3.winfo_screenwidth(),
                                  font=("Poppins",24))
 back_btn.place(x=58/1707*root3.winfo_screenwidth(),y=908/1067*root3.winfo_screenheight(),anchor="nw")
 
-style = ttk.Style()
-style.configure("Treeview.Heading",font=("Poppins Medium",26),rowheight=30,background="#FFFFFF")
+style=ttk.Style()
+style.configure("Treeview.Heading",font=("Poppins Medium",26),rowheight=40,background="#FFFFFF",anchor="nw")
+style.configure("Treeview",font=("Poppins Light",20),rowheight=30)
 treeview = ttk.Treeview(root3, columns=("ID", "Registration Number", "Model", "Capacity", "Transmission", "Manufacture Year", "Price"), show="headings")
-treeview.place(x=260,y=850,
+treeview.place(x=234/1707*root3.winfo_screenwidth(),y=843/1067*root3.winfo_screenheight(),
                width=2000/1707*root3.winfo_screenwidth(),
-               height=450/1067*root3.winfo_screenheight())
+               height=480/1067*root3.winfo_screenheight())
 treeview.bind("<<TreeviewSelect>>",select_item)
 
 treeview.heading("ID", text="ID")
