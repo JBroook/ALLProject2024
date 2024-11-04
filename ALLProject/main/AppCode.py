@@ -640,7 +640,7 @@ class App:
             font=("Poppins Regular",36),
             bg_color="white",fg_color="white",text_color="#1572D3"
         )
-        name_label.place(x=300,y=580,anchor="center")
+        name_label.place(x=300/1536*self.width,y=580/864*self.height,anchor="center")
 
         self.first_name = ctk.StringVar()
         self.first_name.set(self.user_info["first name"])
@@ -793,9 +793,9 @@ class App:
 
         pil_image = img.open("assets/cars/"+car_array[4])
         car_image = ctk.CTkImage(light_image=pil_image,
-                                         size=(600, round(600*pil_image.size[1]/pil_image.size[0])))
+                                         size=(600/1536*self.width, round(600*pil_image.size[1]/pil_image.size[0]) / 864 * self.height))
         car_image_label = ctk.CTkLabel(self.master, image=car_image, text="",fg_color="white")
-        car_image_label.place(x=55, y=300, anchor="nw")
+        car_image_label.place(x=55/1536*self.width, y=300/864*self.height, anchor="nw")
 
         #car details
         #capacity
@@ -806,7 +806,7 @@ class App:
             text_color="#959595",
             fg_color="white"
         )
-        capacity_label.place(x=897,y=162,anchor="nw")
+        capacity_label.place(x=897/1536*self.width,y=162 / 864 * self.height,anchor="nw")
         # transmission
         transmission_label = ctk.CTkLabel(
             master=self.master,
@@ -815,7 +815,7 @@ class App:
             text_color="#959595",
             fg_color="white"
         )
-        transmission_label.place(x=1212, y=162, anchor="nw")
+        transmission_label.place(x=1212/1536*self.width, y=162 / 864 * self.height, anchor="nw")
         # manufacturer year
         manu_year_label = ctk.CTkLabel(
             master=self.master,
@@ -824,16 +824,16 @@ class App:
             text_color="#959595",
             fg_color="white"
         )
-        manu_year_label.place(x=897, y=222, anchor="nw")
+        manu_year_label.place(x=897/1536*self.width, y=222 / 864 * self.height, anchor="nw")
         # price
         price_label = ctk.CTkLabel(
             master=self.master,
             text="$"+str(car_array[3]),
-            font=("Poppins Semibold", 32),
+            font=("Poppins Semibold", round(32/1536*self.width)),
             text_color="black",
             fg_color="white"
         )
-        price_label.place(x=1290, y=222, anchor="nw")
+        price_label.place(x=1360/1536*self.width, y=250 / 864 * self.height, anchor="e")
         #name
         name_label = ctk.CTkLabel(
             master=self.master,
@@ -842,13 +842,13 @@ class App:
             text_color="black",
             fg_color="white"
         )
-        name_label.place(x=858, y=60, anchor="nw")
+        name_label.place(x=858/1536*self.width, y=60 / 864 * self.height, anchor="nw")
 
         #pick up location
         self.pickup_location = ctk.StringVar()
         pickup_location_list = ctk.CTkComboBox(
             self.master,
-            width=263,height=41,
+            width=263/1536*self.width,height=41 / 864 * self.height,
             values=self.pickup_location_list,
             bg_color="white",
             fg_color="#D9D9D9",
@@ -859,7 +859,7 @@ class App:
             dropdown_font=("Poppins Medium",16),
             variable=self.pickup_location
         )
-        pickup_location_list.place(x=1026,y=358,anchor="nw")
+        pickup_location_list.place(x=1026/1536*self.width,y=358 / 864 * self.height,anchor="nw")
 
         #pick up date
         self.pickup_date = ctk.StringVar()
@@ -868,10 +868,10 @@ class App:
             bg_color="white",fg_color="#D9D9D9",hover_color="#B6B6B6",text_color="black",
             font=("Poppins Medium",16),
             anchor="w",
-            width=263,height=41,
+            width=263/1536*self.width,height=41 / 864 * self.height,
             command=lambda : self.set_calendar("create pickup")
         )
-        self.pickup_date_button.place(x=1028,y=451,anchor="nw")
+        self.pickup_date_button.place(x=1028/1536*self.width,y=451 / 864 * self.height,anchor="nw")
 
         # return date
         self.return_date = ctk.StringVar()
@@ -880,10 +880,10 @@ class App:
             bg_color="white", fg_color="#D9D9D9", hover_color="#B6B6B6", text_color="black",
             font=("Poppins Medium", 16),
             anchor="w",
-            width=263, height=41,
+            width=263/1536*self.width, height=41 / 864 * self.height,
             command=lambda: self.set_calendar("create return")
         )
-        self.return_date_button.place(x=1028, y=550, anchor="nw")
+        self.return_date_button.place(x=1028/1536*self.width, y=550 / 864 * self.height, anchor="nw")
 
 
         #confirm button
@@ -1023,9 +1023,9 @@ class App:
         rentals_frame = ctk.CTkScrollableFrame(
             self.master,
             bg_color="white",fg_color="white",
-            width=900,height=550
+            width=900/1536*self.width,height=550/864*self.height
         )
-        rentals_frame.place(x=298,y=149,anchor="nw")
+        rentals_frame.place(x=298/1536*self.width,y=149/864*self.height,anchor="nw")
 
         #back button
         back_btn = ctk.CTkButton(self.master, width=105 / 1536 * self.width,
@@ -1059,13 +1059,13 @@ class App:
             car = all_details[10:18]
 
             slot_frame = ctk.CTkFrame(
-                rentals_frame,width=895,height=240,
+                rentals_frame,width=895/1536*self.width,height=240/864*self.height,
                 bg_color="white",fg_color="white"
             )
             #image
             img_string = "assets/past booking slot frame rated.png" if (booking[9] is not None and booking[9]!=0) else "assets/past booking slot frame.png"
             slot_image = ctk.CTkImage(light_image=img.open(img_string),
-                                           size=(895,240))
+                                           size=(895/1536*self.width,240/864*self.height))
             slot_image_label = ctk.CTkLabel(
                 master=slot_frame, image=slot_image, text="",
                 bg_color="white"
@@ -1076,56 +1076,56 @@ class App:
             # car image
             pil_image = img.open("assets/cars/" + car[4])
             car_image = ctk.CTkImage(light_image=pil_image,
-                                     size=(272, round(272 * pil_image.size[1] / pil_image.size[0])))
+                                     size=(272/1536*self.width, round(272 * pil_image.size[1] / pil_image.size[0])/864*self.height))
             car_image_label = ctk.CTkLabel(master=slot_frame, image=car_image, text="")
-            car_image_label.place(x=30, y=56, anchor="nw")
+            car_image_label.place(x=30/1536*self.width, y=56/864*self.height, anchor="nw")
             #start and end date
             start_label = ctk.CTkLabel(
                 master=slot_frame,text=booking[1],
                 bg_color="white",fg_color="white",text_color="#747474",
                 font=("Poppins Regular",20)
             )
-            start_label.place(x=432,y=70)
+            start_label.place(x=432/1536*self.width,y=70/864*self.height)
             end_label = ctk.CTkLabel(
                 master=slot_frame, text=booking[2],
                 bg_color="white", fg_color="white", text_color="#747474",
                 font=("Poppins Regular", 20)
             )
-            end_label.place(x=432, y=97)
+            end_label.place(x=432/1536*self.width, y=97/864*self.height)
             #location
             location_label = ctk.CTkLabel(
                 master=slot_frame, text=booking[3],
                 bg_color="white", fg_color="white", text_color="#747474",
                 font=("Poppins Regular", 20)
             )
-            location_label.place(x=370, y=138)
+            location_label.place(x=370/1536*self.width, y=138/864*self.height)
 
             # car name
             car_name = ctk.CTkLabel(master=slot_frame, text=car[2], font=("Poppins Medium", 32), text_color="black")
-            car_name.place(x=325, y=20)
+            car_name.place(x=325/1536*self.width, y=20/864*self.height)
 
             #rating/ratings button
             if booking[9] is None or booking[9]==0:
                 rate_button = ctk.CTkButton(
-                    slot_frame,text="Rate",width=105,height=47,
+                    slot_frame,text="Rate",width=105/1536*self.width,height=47/864*self.height,
                     font=("Poppins Medium",16),
                     bg_color="white",fg_color="#1572D3",text_color="white",
                     command=lambda x = all_details: self.rating_page(x, False)
                 )
-                rate_button.place(x=705,y=120)
+                rate_button.place(x=705/1536*self.width,y=120/864*self.height)
             else:
                 rating_label = ctk.CTkLabel(
                     slot_frame,text=booking[9],
                     font=("Poppins Medium",64),
                     bg_color="white",fg_color="white",text_color="black"
                 )
-                rating_label.place(x=715,y=60)
+                rating_label.place(x=715/1536*self.width,y=60/864*self.height)
                 view_button = ctk.CTkButton(
                     slot_frame,text="View",
                     bg_color="white",fg_color="#1572D3",text_color="white",
                     width=105,height=47,font=("Poppins Medium",16),command=lambda x=all_details: self.rating_page(x, True)
                 )
-                view_button.place(x=715,y=145)
+                view_button.place(x=715/1536*self.width,y=145/864*self.height)
 
             slot_frame.pack()
 
@@ -1501,7 +1501,7 @@ class App:
             "last name": "User",
             "username": "Unknown",
             "email": "Unknown",
-            "id": 2
+            "id": -1
         }
         self.search_options = {
             "capacity": "any",
@@ -1529,41 +1529,41 @@ class App:
         today_income_label = ctk.CTkLabel(
             self.master,text=f"RM{today_income:.2f}",
             bg_color="white",fg_color="white",text_color="black",
-            font=("Poppins Medium",36)
+            font=("Poppins Medium",36/1536*self.width)
         )
-        today_income_label.place(x=88,y=240)
+        today_income_label.place(x=88/1536*self.width,y=240/864*self.height)
 
         week_income = 2500
         week_income_label = ctk.CTkLabel(
             self.master,text=f"RM{week_income:.2f}",
             bg_color="white",fg_color="white",text_color="#656565",
-            font=("Poppins Medium",24)
+            font=("Poppins Medium",24/1536*self.width)
         )
-        week_income_label.place(x=352,y=306)
+        week_income_label.place(x=352/1536*self.width,y=306/864*self.height)
 
         review_average = 4.65
         review_average_label = ctk.CTkLabel(
             self.master,text=f"{review_average:.2f}",
             bg_color="white",fg_color="white",text_color="black",
-            font=("Poppins Medium",36)
+            font=("Poppins Medium",36/1536*self.width)
         )
-        review_average_label.place(x=92,y=520)
+        review_average_label.place(x=92/1536*self.width,y=520/864*self.height)
 
         review_count = 10
         review_count_label = ctk.CTkLabel(
             self.master, text=f"{review_count}",
             bg_color="white", fg_color="white", text_color="#656565",
-            font=("Poppins Medium", 24)
+            font=("Poppins Medium", 24/1536*self.width)
         )
-        review_count_label.place(x=457,y=585)
+        review_count_label.place(x=457/1536*self.width,y=585/864*self.height)
 
         user_count = 12
         user_count_label = ctk.CTkLabel(
             self.master, text=f"{user_count}",
             bg_color="white", fg_color="white", text_color="black",
-            font=("Poppins Medium", 36)
+            font=("Poppins Medium", 36/1536*self.width)
         )
-        user_count_label.place(x=596, y=240)
+        user_count_label.place(x=596/1536*self.width, y=240/864*self.height)
         #pie chart
         paid_users = 8
         new_users = 4
@@ -1573,26 +1573,26 @@ class App:
         plt.savefig("assets/output1", facecolor='w', bbox_inches="tight", pad_inches=0.3, transparent=True)
 
         pie_chart = ctk.CTkImage(light_image=img.open("assets/output1.png"),
-                                       size=(218,218))
+                                       size=(218/1536*self.width,218/864*self.height))
         pie_chart_label = ctk.CTkLabel(master=self.master, image=pie_chart, text="")
-        pie_chart_label.place(x=625, y=319, anchor="nw")
+        pie_chart_label.place(x=625/1536*self.width, y=319/864*self.height, anchor="nw")
 
         text_list = ["Past Day","Past Week","Past Month","Past Year"]
         for i in range(4):
             button = ctk.CTkButton(
                 self.master,text=text_list[i],
                 bg_color="white",fg_color="#1572D3",text_color="white",
-                width=185,height=169,
-                font=("Poppins Medium",20),command=lambda x=text_list[i]: self.print_pdf(x)
+                width=185/1536*self.width,height=169/864*self.height,
+                font=("Poppins Medium",20/1536*self.width),command=lambda x=text_list[i]: self.print_pdf(x)
             )
-            button.place(x=1035+208*(i%2),y=258+189*(i>1))
+            button.place(x=(1035+208*(i%2))/1536*self.width,y=(258+189*(i>1))/864*self.height)
 
             # Back Button
             back_button = ctk.CTkButton(
                 self.master, text="Back", bg_color="white", fg_color="#1572D3",
                 text_color="white",
                 border_color="#1572D3", width=89 / 1280 * self.width,
-                height=39 / 720 * self.height, font=("Poppins Medium", 18),
+                height=39 / 720 * self.height, font=("Poppins Medium", 18/1536*self.width),
                 command=self.admin_home
             )
             back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
