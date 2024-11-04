@@ -15,8 +15,9 @@ cursor.execute(
         PRICE INTEGER NOT NULL,
         IMAGE VARCHAR(255) NOT NULL,
         CAPACITY INTEGER NOT NULL,
-        RATING INTEGER NOT NULL,
-        TRANSMISSION VARCHAR(255) NOT NULL
+        RATING INTEGER,
+        TRANSMISSION VARCHAR(255) NOT NULL,
+        PLATE_NUMBER VARCHAR(10) NOT NULL
     )
     '''
 )
@@ -30,7 +31,8 @@ car_list = [
         "image" : "honda accord.png",
         "capacity" : 5,
         "rating" : 4.5,
-        "transmission" : "Auto"
+        "transmission" : "Auto",
+        "plate_number" : "PPZ 1023"
     },
 
     {
@@ -40,7 +42,8 @@ car_list = [
         "image" : "honda city.png",
         "capacity" : 5,
         "rating" : 4.8,
-        "transmission" : "Auto"
+        "transmission" : "Auto",
+        "plate_number" : "PJK 4688"
     },
 
     {
@@ -50,7 +53,8 @@ car_list = [
         "image" : "honda civic.png",
         "capacity" : 5,
         "rating" : 3.9,
-        "transmission" : "Manual"
+        "transmission" : "Manual",
+        "plate_number" : "PVG 4547"
     },
     {
         "manufacturer_year" : 2022,
@@ -59,7 +63,8 @@ car_list = [
         "image" : "hyundai sonata.png",
         "capacity" : 5,
         "rating" : 4.2,
-        "transmission" : "Manual"
+        "transmission" : "Manual",
+        "plate_number" : "PMS 1851"
     },
     {
         "manufacturer_year" : 2018,
@@ -68,7 +73,8 @@ car_list = [
         "image" : "nissan serena.png",
         "capacity" : 7,
         "rating" : 4.9,
-        "transmission" : "Auto"
+        "transmission" : "Auto",
+        "plate_number" : "PLP 4158"
     },
     {
         "manufacturer_year" : 2012,
@@ -77,7 +83,8 @@ car_list = [
         "image" : "perodua myvi.png",
         "capacity" : 5,
         "rating" : 4.8,
-        "transmission" : "Auto"
+        "transmission" : "Auto",
+        "plate_number" : "PQH 8971"
     }
 ]
 
@@ -95,7 +102,8 @@ if len(result)==0:
             IMAGE,
             CAPACITY,
             RATING,
-            TRANSMISSION
+            TRANSMISSION,
+            PLATE_NUMBER
         )
         VALUES
         (
@@ -105,7 +113,8 @@ if len(result)==0:
             \'{car["image"]}\',
             {car["capacity"]},
             {car["rating"]},
-            \'{car["transmission"]}\'
+            \'{car["transmission"]}\',
+            \'{car["plate_number"]}\'
         )
         '''
         cursor.execute(query)

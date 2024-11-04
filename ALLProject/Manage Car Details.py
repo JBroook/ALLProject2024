@@ -1,14 +1,14 @@
-import customtkinter
+import ctk
 from tkinter import messagebox, ttk, filedialog
 from PIL import Image
 import sqlite3
 
-root3=customtkinter.CTk()
-root3.geometry("1200x900")
+self.master=ctk.CTk()
+self.master.geometry("1200x900")
 
-manage_car_ui=customtkinter.CTkImage(light_image=Image.open("Project Images/manage car details.png"),
-                                       size=(root3.winfo_screenwidth(),root3.winfo_screenheight()-68))
-manage_car_ui_label=customtkinter.CTkLabel(root3,image=manage_car_ui,text="")
+manage_car_ui=ctk.CTkImage(light_image=img.open("Project Images/manage car details.png"),
+                                       size=(self.width,self.height-68))
+manage_car_ui_label=ctk.CTkLabel(self.master,image=manage_car_ui,text="")
 manage_car_ui_label.place(x=0,y=0,anchor="nw")
 
 selected_car_id=None
@@ -80,7 +80,7 @@ def browse_image():
 
 def upload_image():
     try:
-        img=customtkinter.CTkImage(light_image=Image.open(image_path),size=(450/1707*root3.winfo_screenwidth(),300/1067*root3.winfo_screenheight()))
+        img=ctk.CTkImage(light_image=img.open(image_path),size=(450/1707*self.width,300/1067*self.height))
         image_display.configure(image=img)
         image_display.image=img
 
@@ -168,150 +168,150 @@ def clear_selection():
     price_entry.delete(0, 'end')
     image_display.configure(image="")
 
-registration_number_entry=customtkinter.CTkEntry(root3,width=363/1707*root3.winfo_screenwidth(),
-                                                 height=34/1067*root3.winfo_screenheight(),
+registration_number_entry=ctk.CTkEntry(self.master,width=363/1707*self.width,
+                                                 height=34/1067*self.height,
                                                  bg_color="#F0F4FC",
                                                  fg_color="#D9D9D9",
                                                  border_color="#D9D9D9",
                                                  text_color="black",
                                                  font=("Poppins Light",24))
-registration_number_entry.place(x=1041/1707*root3.winfo_screenwidth(),y=143/1067*root3.winfo_screenheight(),anchor="nw")
+registration_number_entry.place(x=1041/1707*self.width,y=143/1067*self.height,anchor="nw")
 
-model_entry=customtkinter.CTkEntry(root3,width=363/1707*root3.winfo_screenwidth(),
-                                   height=34/1067*root3.winfo_screenheight(),
+model_entry=ctk.CTkEntry(self.master,width=363/1707*self.width,
+                                   height=34/1067*self.height,
                                    bg_color="#F0F4FC",
                                    fg_color="#D9D9D9",
                                    border_color="#D9D9D9",
                                    text_color="black",
                                    font=("Poppins Light",24))
-model_entry.place(x=1041/1707*root3.winfo_screenwidth(),y=189/1067*root3.winfo_screenheight(),anchor="nw")
+model_entry.place(x=1041/1707*self.width,y=189/1067*self.height,anchor="nw")
 
-capacity_entry=customtkinter.CTkEntry(root3,width=363/1707*root3.winfo_screenwidth(),
-                                      height=34/1067*root3.winfo_screenheight(),
+capacity_entry=ctk.CTkEntry(self.master,width=363/1707*self.width,
+                                      height=34/1067*self.height,
                                       bg_color="#F0F4FC",
                                       fg_color="#D9D9D9",
                                       border_color="#D9D9D9",
                                       text_color="black",
                                       font=("Poppins Light",24))
-capacity_entry.place(x=1041/1707*root3.winfo_screenwidth(),y=234/1067*root3.winfo_screenheight(),anchor="nw")
+capacity_entry.place(x=1041/1707*self.width,y=234/1067*self.height,anchor="nw")
 
-transmission_entry=customtkinter.CTkEntry(root3,width=363/1707*root3.winfo_screenwidth(),
-                                          height=34/1067*root3.winfo_screenheight(),
+transmission_entry=ctk.CTkEntry(self.master,width=363/1707*self.width,
+                                          height=34/1067*self.height,
                                           bg_color="#F0F4FC",
                                           fg_color="#D9D9D9",
                                           border_color="#D9D9D9",
                                           text_color="black",
                                           font=("Poppins Light",24))
-transmission_entry.place(x=1041/1707*root3.winfo_screenwidth(),y=279/1067*root3.winfo_screenheight(),anchor="nw")
+transmission_entry.place(x=1041/1707*self.width,y=279/1067*self.height,anchor="nw")
 
-manufacture_year_entry=customtkinter.CTkEntry(root3,width=363/1707*root3.winfo_screenwidth(),
-                                              height=34/1067*root3.winfo_screenheight(),
+manufacture_year_entry=ctk.CTkEntry(self.master,width=363/1707*self.width,
+                                              height=34/1067*self.height,
                                               bg_color="#F0F4FC",
                                               fg_color="#D9D9D9",
                                               border_color="#D9D9D9",
                                               text_color="black",
                                               font=("Poppins Light",24))
-manufacture_year_entry.place(x=1041/1707*root3.winfo_screenwidth(),y=325/1067*root3.winfo_screenheight(),anchor="nw")
+manufacture_year_entry.place(x=1041/1707*self.width,y=325/1067*self.height,anchor="nw")
 
-price_entry=customtkinter.CTkEntry(root3,width=363/1707*root3.winfo_screenwidth(),
-                                   height=34/1067*root3.winfo_screenheight(),
+price_entry=ctk.CTkEntry(self.master,width=363/1707*self.width,
+                                   height=34/1067*self.height,
                                    bg_color="#F0F4FC",
                                    fg_color="#D9D9D9",
                                    border_color="#D9D9D9",
                                    text_color="black",
                                    font=("Poppins Light",24))
-price_entry.place(x=1041/1707*root3.winfo_screenwidth(),y=371/1067*root3.winfo_screenheight(),anchor="nw")
+price_entry.place(x=1041/1707*self.width,y=371/1067*self.height,anchor="nw")
 
-image_display=customtkinter.CTkLabel(root3,width=494/1707*root3.winfo_screenwidth(),
-                                     height=358/1067*root3.winfo_screenheight(),
+image_display=ctk.CTkLabel(self.master,width=494/1707*self.width,
+                                     height=358/1067*self.height,
                                      text="",
                                      bg_color="#F0F4FC",
                                      fg_color="#FFFFFF",
                                      corner_radius=9)
-image_display.place(x=208/1707*root3.winfo_screenwidth(),y=144/1067*root3.winfo_screenheight(),anchor="nw")
+image_display.place(x=208/1707*self.width,y=144/1067*self.height,anchor="nw")
 
-insert_image_btn=customtkinter.CTkButton(root3,width=208/1707*root3.winfo_screenwidth(),
-                                         height=45.39/1067*root3.winfo_screenheight(),
+insert_image_btn=ctk.CTkButton(self.master,width=208/1707*self.width,
+                                         height=45.39/1067*self.height,
                                          bg_color="#F0F4FC",
                                          fg_color="#1572D3",
                                          text="Insert Image",
                                          text_color="#FFFFFF",
                                          font=("Poppins",24),
                                          command=browse_image)
-insert_image_btn.place(x=783/1707*root3.winfo_screenwidth(),y=417/1067*root3.winfo_screenheight(),anchor="nw")
+insert_image_btn.place(x=783/1707*self.width,y=417/1067*self.height,anchor="nw")
 
-save_btn=customtkinter.CTkButton(root3,width=150/1707*root3.winfo_screenwidth(),
-                                 height=58/1067*root3.winfo_screenheight(),
+save_btn=ctk.CTkButton(self.master,width=150/1707*self.width,
+                                 height=58/1067*self.height,
                                  bg_color="#F0F4FC",
                                  fg_color="#1572D3",
                                  text="Save",
                                  text_color="#FFFFFF",
                                  font=("Poppins",24),
                                  command=save_data)
-save_btn.place(x=783/1707*root3.winfo_screenwidth(),y=488/1067*root3.winfo_screenheight(),anchor="nw")
+save_btn.place(x=783/1707*self.width,y=488/1067*self.height,anchor="nw")
 
-update_btn=customtkinter.CTkButton(root3,width=150/1707*root3.winfo_screenwidth(),
-                                   height=58/1067*root3.winfo_screenheight(),
+update_btn=ctk.CTkButton(self.master,width=150/1707*self.width,
+                                   height=58/1067*self.height,
                                    bg_color="#F0F4FC",
                                    fg_color="#1572D3",
                                    text="Update",
                                    text_color="#FFFFFF",
                                    font=("Poppins",24),
                                    command=update_data)
-update_btn.place(x=955/1707*root3.winfo_screenwidth(),y=488/1067*root3.winfo_screenheight(),anchor="nw")
+update_btn.place(x=955/1707*self.width,y=488/1067*self.height,anchor="nw")
 
-delete_btn=customtkinter.CTkButton(root3,width=150/1707*root3.winfo_screenwidth(),
-                                 height=58/1067*root3.winfo_screenheight(),
+delete_btn=ctk.CTkButton(self.master,width=150/1707*self.width,
+                                 height=58/1067*self.height,
                                  bg_color="#F0F4FC",
                                  fg_color="#1572D3",
                                  text="Delete",
                                  text_color="#FFFFFF",
                                  font=("Poppins",24),
                                  command=delete_data)
-delete_btn.place(x=1127/1707*root3.winfo_screenwidth(),y=488/1067*root3.winfo_screenheight(),anchor="nw")
+delete_btn.place(x=1127/1707*self.width,y=488/1067*self.height,anchor="nw")
 
-clear_btn=customtkinter.CTkButton(root3,width=150/1707*root3.winfo_screenwidth(),
-                                 height=58/1067*root3.winfo_screenheight(),
+clear_btn=ctk.CTkButton(self.master,width=150/1707*self.width,
+                                 height=58/1067*self.height,
                                  bg_color="#F0F4FC",
                                  fg_color="#1572D3",
                                  text="Clear",
                                  text_color="#FFFFFF",
                                  font=("Poppins",24),
                                  command=clear_selection)
-clear_btn.place(x=1299/1707*root3.winfo_screenwidth(),y=488/1067*root3.winfo_screenheight(),anchor="nw")
+clear_btn.place(x=1299/1707*self.width,y=488/1067*self.height,anchor="nw")
 
-back_btn=customtkinter.CTkButton(root3,width=150/1707*root3.winfo_screenwidth(),
-                                 height=58/1067*root3.winfo_screenheight(),
+back_btn=ctk.CTkButton(self.master,width=150/1707*self.width,
+                                 height=58/1067*self.height,
                                  bg_color="#F0F4FC",
                                  fg_color="#1572D3",
                                  text="Back",
                                  text_color="#FFFFFF",
                                  font=("Poppins",24))
-back_btn.place(x=58/1707*root3.winfo_screenwidth(),y=908/1067*root3.winfo_screenheight(),anchor="nw")
+back_btn.place(x=58/1707*self.width,y=908/1067*self.height,anchor="nw")
 
 style = ttk.Style()
-style.configure("Treeview.Heading",font=("Poppins Medium",26),rowheight=30,background="#FFFFFF")
-treeview = ttk.Treeview(root3, columns=("ID", "Registration Number", "Model", "Capacity", "Transmission", "Manufacture Year", "Price"), show="headings")
-treeview.place(x=260,y=850,
-               width=2000/1707*root3.winfo_screenwidth(),
-               height=450/1067*root3.winfo_screenheight())
+style.configure("Treeview.Heading",font=("Poppins Medium",18),rowheight=30,background="#FFFFFF")
+treeview = ttk.Treeview(self.master, columns=("ID", "Registration Number", "Model", "Capacity", "Transmission", "Manufacture Year", "Price"), show="headings")
+treeview.place(x=260,y=600,
+               width=1500,
+               height=380)
 treeview.bind("<<TreeviewSelect>>",select_item)
 
 treeview.heading("ID", text="ID")
 treeview.column("ID", width=100, anchor="center")
 treeview.heading("Registration Number", text="Registration Number")
-treeview.column("Registration Number", width=350, anchor="center")
+treeview.column("Registration Number", width=300, anchor="center")
 treeview.heading("Model", text="Model")
-treeview.column("Model", width=300, anchor="center")
+treeview.column("Model", width=200, anchor="center")
 treeview.heading("Capacity", text="Capacity")
-treeview.column("Capacity", width=300, anchor="center")
+treeview.column("Capacity", width=150, anchor="center")
 treeview.heading("Transmission", text="Transmission")
-treeview.column("Transmission", width=300, anchor="center")
+treeview.column("Transmission", width=200, anchor="center")
 treeview.heading("Manufacture Year", text="Manufacture Year")
-treeview.column("Manufacture Year", width=300, anchor="center")
+treeview.column("Manufacture Year", width=200, anchor="center")
 treeview.heading("Price",text="Price (RM)")
-treeview.column("Price", width=250, anchor="center")
+treeview.column("Price", width=150, anchor="center")
 
 refresh_treeview()
 
-root3.mainloop()
+self.master.mainloop()

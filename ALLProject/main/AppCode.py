@@ -1,4 +1,6 @@
-from tkinter import messagebox
+import os
+import pickle
+from tkinter import messagebox, ttk, filedialog
 import sqlite3 as sql
 import matplotlib.pyplot as plt
 import numpy as np
@@ -47,6 +49,9 @@ def check_filter_options(dictionary, array):
 class App:
     def __init__(self, master):
         #app settings
+        self.selected_booking = None
+        self.selected_car_id = None
+        self.image_path = None
         self.master = master
         self.master.title("Car Rental App")
         self.master.geometry("800x500")
@@ -62,7 +67,7 @@ class App:
             "last name" : "User",
             "username" : "Unknown",
             "email" : "Unknown",
-            "id" : 2
+            "id" : -1
         }
         self.search_options = {
             "capacity": "any",
@@ -317,7 +322,7 @@ class App:
             ctk.CTkButton(self.newWindow,text="Submit",command=self.check_verification).pack()
 
     def login_enter(self, event):
-        if event.keysym == "Return":
+        if event.keysym == "Return" and self.user_info["id"]==-1:
             self.test_credentials()
 
     def home_page(self):
@@ -714,6 +719,15 @@ class App:
                                            font=("Poppins Light", 24),command=self.enable_edit)
         edit_btn.place(x=1340 / 1707 * self.width, y=690 / 1067 * self.height, anchor="nw")
 
+        # Logout Button
+        out_button = ctk.CTkButton(self.master, text="Logout", bg_color="white", fg_color="#1572D3",
+                                   text_color="white",
+                                   border_color="#1572D3", width=89 / 1280 * self.width,
+                                   height=39 / 720 * self.height, font=("Poppins Medium", 18),
+                                   command=self.logout
+                                   )
+        out_button.place(x=1148 / 1280 * self.width, y=586 / 720 * self.height)
+
     def enable_edit(self):
         self.first_name_entry.configure(state="normal")
         self.last_name_entry.configure(state="normal")
@@ -1026,6 +1040,16 @@ class App:
         booking_list = self.cursor.fetchall()
 
         for all_details in booking_list:
+            print("deets",all_details)
+            if all_details[5]==self.user_info["id"]:
+                if time.strptime(all_details[2],"%d-%m-%Y")<time.strptime(date.today().strftime('%d-%m-%Y'),'%d-%m-%Y') or all_details[6]==0:
+                    self.cursor.execute(f"UPDATE BOOKINGS SET CURRENT_BOOKING = 0 WHERE BOOKING_ID = {all_details[0]}")
+                    self.sqliteConnection.commit()
+                else:
+                    continue
+            else:
+                continue
+
             self.cursor.execute(f"SELECT SCORE FROM RATINGS WHERE BOOKING_ID = {all_details[0]}")
             all_details = list(all_details)
             all_details.insert(9,self.cursor.fetchone())
@@ -1085,7 +1109,8 @@ class App:
                 rate_button = ctk.CTkButton(
                     slot_frame,text="Rate",width=105,height=47,
                     font=("Poppins Medium",16),
-                    bg_color="white",fg_color="#1572D3",text_color="white",command=self.rating_page(all_details, False)
+                    bg_color="white",fg_color="#1572D3",text_color="white",
+                    command=lambda x = all_details: self.rating_page(x, False)
                 )
                 rate_button.place(x=705,y=120)
             else:
@@ -1098,7 +1123,7 @@ class App:
                 view_button = ctk.CTkButton(
                     slot_frame,text="View",
                     bg_color="white",fg_color="#1572D3",text_color="white",
-                    width=105,height=47,font=("Poppins Medium",16),command=lambda : self.rating_page(all_details, True)
+                    width=105,height=47,font=("Poppins Medium",16),command=lambda x=all_details: self.rating_page(x, True)
                 )
                 view_button.place(x=715,y=145)
 
@@ -1180,17 +1205,19 @@ class App:
                                        bg_color="white", fg_color="#1572D3", text="Update", text_color="#FFFFFF",
                                        font=("Poppins", 24),command=lambda : self.rental_details(car,booking[0]))
             update_btn.place(x=1071 / 1707 * self.width, y=621.08 / 1067 * self.height, anchor="nw")
+            if booking[7]!="Pending":
+                update_btn.configure(state="disabled")
 
             cancel_btn = ctk.CTkButton(self.master, width=171 / 1707 * self.width, height=60.4 / 1067 * self.height,
                                        bg_color="white", fg_color="#1572D3", text="Cancel", text_color="#FFFFFF",
                                        font=("Poppins", 24),command=lambda : self.prompt_cancel(booking[0]))
             cancel_btn.place(x=1273 / 1707 * self.width, y=621.08 / 1067 * self.height, anchor="nw")
 
-            # if booking[8]=="Approved":
-            pay_btn = ctk.CTkButton(self.master, width=153 / 1707 * self.width, height=54.4 / 1067 * self.height,
-                                    bg_color="white", fg_color="#1572D3", text="Pay", text_color="#FFFFFF",
-                                    font=("Poppins", 24),command=lambda : self.payment_page(booking[0]))
-            pay_btn.place(x=1098 / 1707 * self.width, y=809 / 1067 * self.height, anchor="nw")
+            if booking[7]=="Approved":
+                pay_btn = ctk.CTkButton(self.master, width=153 / 1707 * self.width, height=54.4 / 1067 * self.height,
+                                        bg_color="white", fg_color="#1572D3", text="Pay", text_color="#FFFFFF",
+                                        font=("Poppins", 24),command=lambda : self.payment_page(booking[0]))
+                pay_btn.place(x=1098 / 1707 * self.width, y=809 / 1067 * self.height, anchor="nw")
         else:
             current_booking_ui = ctk.CTkImage(light_image=img.open("assets/current booking ui empty.png"),
                                               size=(self.width, self.height - 68))
@@ -1402,7 +1429,7 @@ class App:
     def rating_button(self, star_selected):
         for i in range(5):
             if i<star_selected:
-                self.rating_button_list[i].configure(text="")
+                self.rating_button_list[i].configure(text="★")
             else:
                 self.rating_button_list[i].configure(text="☆")
         self.rating = star_selected
@@ -1438,28 +1465,25 @@ class App:
         out_button = ctk.CTkButton(self.master, text="Logout", bg_color="white", fg_color="#1572D3",
                                              text_color="white",
                                              border_color="#1572D3", width=89 / 1280 * self.width,
-                                             height=39 / 720 * self.height, font=("Poppins Medium", 18))
+                                             height=39 / 720 * self.height, font=("Poppins Medium", 18),
+                                             command=self.logout
+                                   )
         out_button.place(x=1148 / 1280 * self.width, y=586 / 720 * self.height)
-
-        # Manage Cars Button
-        cars_button = ctk.CTkButton(self.master, text="Go", bg_color="white", fg_color="#1572D3",
-                                              text_color="white",
-                                              border_color="#1572D3", width=89 / 1280 * self.width,
-                                              height=39 / 720 * self.height, font=("Poppins Medium", 18))
-        cars_button.place(x=999 / 1280 * self.width, y=280 / 720 * self.height)
 
         # Manage Bookings Button
         booking_button = ctk.CTkButton(self.master, text="Go", bg_color="white", fg_color="#1572D3",
                                                  text_color="white",
                                                  border_color="#1572D3", width=89 / 1280 * self.width,
-                                                 height=39 / 720 * self.height, font=("Poppins Medium", 18))
+                                                 height=39 / 720 * self.height, font=("Poppins Medium", 18),
+                                                 command=self.manage_bookings
+                                       )
         booking_button.place(x=999 / 1280 * self.width, y=280 / 720 * self.height)
 
         # Manage Cars Button
         cars_button = ctk.CTkButton(self.master, text="Go", bg_color="white", fg_color="#1572D3",
                                               text_color="white",
                                               border_color="#1572D3", width=89 / 1280 * self.width,
-                                              height=39 / 720 * self.height, font=("Poppins Medium", 18))
+                                              height=39 / 720 * self.height, font=("Poppins Medium", 18),command=self.manage_cars)
         cars_button.place(x=380 / 1280 * self.width, y=280 / 720 * self.height)
 
         # Performance Report Button
@@ -1469,6 +1493,25 @@ class App:
                                                      height=39 / 720 * self.height,
                                                      font=("Poppins Medium", 18),command=self.performance_report)
         performance_button.place(x=729 / 1280 * self.width, y=506 / 720 * self.height)
+
+    def logout(self):
+        self.login()
+        self.user_info = {
+            "first name": "Default",
+            "last name": "User",
+            "username": "Unknown",
+            "email": "Unknown",
+            "id": 2
+        }
+        self.search_options = {
+            "capacity": "any",
+            "manufacturer year": "any",
+            "transmission": "any",
+            "price": "any"
+        }
+        self.current_calendar = "pickup"
+        self.rating_button_list = []
+        self.rating = 0
 
     def performance_report(self):
         for i in self.master.winfo_children():
@@ -1554,9 +1597,559 @@ class App:
             )
             back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
 
-
     def print_pdf(self,time_option):
         print(time_option)
         c = canvas.Canvas('ex.pdf')
         c.drawString(100,100,time_option)
         c.save()
+
+    def manage_cars(self):
+        for i in self.master.winfo_children():
+            i.destroy()
+
+        manage_car_ui = ctk.CTkImage(light_image=img.open("assets/manage car details ui.png"),
+                                     size=(self.width, self.height - 68))
+        manage_car_ui_label = ctk.CTkLabel(self.master, image=manage_car_ui, text="")
+        manage_car_ui_label.place(x=0, y=0, anchor="nw")
+
+        self.registration_number_entry = ctk.CTkEntry(self.master, width=363 / 1707 * self.width,
+                                                 height=34 / 1067 * self.height,
+                                                 bg_color="#F0F4FC",
+                                                 fg_color="#D9D9D9",
+                                                 border_color="#D9D9D9",
+                                                 text_color="black",
+                                                 font=("Poppins Light", 24))
+        self.registration_number_entry.place(x=1041 / 1707 * self.width, y=143 / 1067 * self.height, anchor="nw")
+
+        self.model_entry = ctk.CTkEntry(self.master, width=363 / 1707 * self.width,
+                                   height=34 / 1067 * self.height,
+                                   bg_color="#F0F4FC",
+                                   fg_color="#D9D9D9",
+                                   border_color="#D9D9D9",
+                                   text_color="black",
+                                   font=("Poppins Light", 24))
+        self.model_entry.place(x=1041 / 1707 * self.width, y=189 / 1067 * self.height, anchor="nw")
+
+        self.capacity_entry = ctk.CTkEntry(self.master, width=363 / 1707 * self.width,
+                                      height=34 / 1067 * self.height,
+                                      bg_color="#F0F4FC",
+                                      fg_color="#D9D9D9",
+                                      border_color="#D9D9D9",
+                                      text_color="black",
+                                      font=("Poppins Light", 24))
+        self.capacity_entry.place(x=1041 / 1707 * self.width, y=234 / 1067 * self.height, anchor="nw")
+
+        self.transmission_entry = ctk.CTkEntry(self.master, width=363 / 1707 * self.width,
+                                          height=34 / 1067 * self.height,
+                                          bg_color="#F0F4FC",
+                                          fg_color="#D9D9D9",
+                                          border_color="#D9D9D9",
+                                          text_color="black",
+                                          font=("Poppins Light", 24))
+        self.transmission_entry.place(x=1041 / 1707 * self.width, y=279 / 1067 * self.height, anchor="nw")
+
+        self.manufacture_year_entry = ctk.CTkEntry(self.master, width=363 / 1707 * self.width,
+                                              height=34 / 1067 * self.height,
+                                              bg_color="#F0F4FC",
+                                              fg_color="#D9D9D9",
+                                              border_color="#D9D9D9",
+                                              text_color="black",
+                                              font=("Poppins Light", 24))
+        self.manufacture_year_entry.place(x=1041 / 1707 * self.width, y=325 / 1067 * self.height, anchor="nw")
+
+        self.price_entry = ctk.CTkEntry(self.master, width=363 / 1707 * self.width,
+                                   height=34 / 1067 * self.height,
+                                   bg_color="#F0F4FC",
+                                   fg_color="#D9D9D9",
+                                   border_color="#D9D9D9",
+                                   text_color="black",
+                                   font=("Poppins Light", 24))
+        self.price_entry.place(x=1041 / 1707 * self.width, y=371 / 1067 * self.height, anchor="nw")
+
+        self.image_display = ctk.CTkLabel(self.master, width=494 / 1707 * self.width,
+                                     height=358 / 1067 * self.height,
+                                     text="",
+                                     bg_color="#F0F4FC",
+                                     fg_color="#FFFFFF",
+                                     corner_radius=9)
+        self.image_display.place(x=208 / 1707 * self.width, y=144 / 1067 * self.height, anchor="nw")
+
+        insert_image_btn = ctk.CTkButton(self.master, width=208 / 1707 * self.width,
+                                         height=45.39 / 1067 * self.height,
+                                         bg_color="#F0F4FC",
+                                         fg_color="#1572D3",
+                                         text="Insert Image",
+                                         text_color="#FFFFFF",
+                                         font=("Poppins", 24),
+                                         command=lambda:self.manage_car_button("insert")
+                                         )
+        insert_image_btn.place(x=783 / 1707 * self.width, y=417 / 1067 * self.height, anchor="nw")
+
+        save_btn = ctk.CTkButton(self.master, width=150 / 1707 * self.width,
+                                 height=58 / 1067 * self.height,
+                                 bg_color="#F0F4FC",
+                                 fg_color="#1572D3",
+                                 text="Save",
+                                 text_color="#FFFFFF",
+                                 font=("Poppins", 24),
+                                 command=lambda:self.manage_car_button("save")
+                                 )
+        save_btn.place(x=783 / 1707 * self.width, y=488 / 1067 * self.height, anchor="nw")
+
+        update_btn = ctk.CTkButton(self.master, width=150 / 1707 * self.width,
+                                   height=58 / 1067 * self.height,
+                                   bg_color="#F0F4FC",
+                                   fg_color="#1572D3",
+                                   text="Update",
+                                   text_color="#FFFFFF",
+                                   font=("Poppins", 24),
+                                   command=lambda:self.manage_car_button("update")
+                                 )
+        update_btn.place(x=955 / 1707 * self.width, y=488 / 1067 * self.height, anchor="nw")
+
+        delete_btn = ctk.CTkButton(self.master, width=150 / 1707 * self.width,
+                                   height=58 / 1067 * self.height,
+                                   bg_color="#F0F4FC",
+                                   fg_color="#1572D3",
+                                   text="Delete",
+                                   text_color="#FFFFFF",
+                                   font=("Poppins", 24),
+                                   command=lambda:self.manage_car_button("delete")
+                                 )
+        delete_btn.place(x=1127 / 1707 * self.width, y=488 / 1067 * self.height, anchor="nw")
+
+        clear_btn = ctk.CTkButton(self.master, width=150 / 1707 * self.width,
+                                  height=58 / 1067 * self.height,
+                                  bg_color="#F0F4FC",
+                                  fg_color="#1572D3",
+                                  text="Clear",
+                                  text_color="#FFFFFF",
+                                  font=("Poppins", 24),
+                                  command=lambda:self.manage_car_button("clear")
+                                 )
+        clear_btn.place(x=1299 / 1707 * self.width, y=488 / 1067 * self.height, anchor="nw")
+
+        back_btn = ctk.CTkButton(self.master, width=150 / 1707 * self.width,
+                                 height=58 / 1067 * self.height,
+                                 bg_color="#F0F4FC",
+                                 fg_color="#1572D3",
+                                 text="Back",
+                                 text_color="#FFFFFF",
+                                 font=("Poppins", 24),
+                                 command=self.admin_home)
+        back_btn.place(x=58 / 1707 * self.width, y=908 / 1067 * self.height, anchor="nw")
+
+        style = ttk.Style()
+        style.configure("Treeview.Heading", font=("Poppins Medium", 18), rowheight=30, background="#FFFFFF")
+        style.configure("Treeview", font=("Poppins", 16), rowheight=32)
+        self.car_treeview = ttk.Treeview(self.master, columns=(
+        "ID", "Registration Number", "Manufacturer Year", "Model", "Price", "Capacity", "Transmission"), show="headings")
+        self.car_treeview.place(x=260, y=600,
+                       width=1500,
+                       height=380)
+        self.car_treeview.bind("<<TreeviewSelect>>", self.select_car)
+
+        self.car_treeview.heading("ID", text="ID")
+        self.car_treeview.column("ID", width=100, anchor="center")
+        self.car_treeview.heading("Manufacturer Year", text="Manufacturer Year")
+        self.car_treeview.column("Manufacturer Year", width=200, anchor="center")
+        self.car_treeview.heading("Registration Number", text="Registration Number")
+        self.car_treeview.column("Registration Number", width=300, anchor="center")
+        self.car_treeview.heading("Model", text="Model")
+        self.car_treeview.column("Model", width=200, anchor="center")
+        self.car_treeview.heading("Price", text="Price (RM)")
+        self.car_treeview.column("Price", width=150, anchor="center")
+        self.car_treeview.heading("Capacity", text="Capacity")
+        self.car_treeview.column("Capacity", width=150, anchor="center")
+        self.car_treeview.heading("Transmission", text="Transmission")
+        self.car_treeview.column("Transmission", width=200, anchor="center")
+
+        #insert all current car values
+        self.cursor.execute("SELECT CAR_ID, PLATE_NUMBER, MANUFACTURER_YEAR, MODEL, PRICE, CAPACITY, TRANSMISSION FROM CARS")
+        for i in self.cursor.fetchall():
+            print(i)
+            self.car_treeview.insert("","end",values=i)
+
+    def select_car(self, event):
+        selected_item = self.car_treeview.selection()
+        if selected_item:
+            item = self.car_treeview.item(selected_item)
+            values = item['values']
+            self.selected_car_id = values[0]
+
+            self.cursor.execute(f'SELECT * FROM CARS WHERE CAR_ID = {self.selected_car_id}')
+            car_data = self.cursor.fetchone()
+
+            if car_data:
+                self.registration_number_entry.delete(0, 'end')
+                self.registration_number_entry.insert(0, car_data[8])
+                self.model_entry.delete(0, 'end')
+                self.model_entry.insert(0, car_data[2])
+                self.capacity_entry.delete(0, 'end')
+                self.capacity_entry.insert(0, car_data[5])
+                self.transmission_entry.delete(0, 'end')
+                self.transmission_entry.insert(0, car_data[7])
+                self.manufacture_year_entry.delete(0, 'end')
+                self.manufacture_year_entry.insert(0, car_data[1])
+                self.price_entry.delete(0, 'end')
+                self.price_entry.insert(0, car_data[3])
+
+                image_path = car_data[4]
+                if image_path:
+                    try:
+                        pil_image = img.open("assets/cars/"+image_path)
+                        car_image = ctk.CTkImage(light_image=pil_image,
+                                           size=((200*pil_image.size[0]/pil_image.size[1]) / 1707 * self.width, 200 / 1067 * self.height))
+                        self.image_display.configure(image=car_image)
+                        self.image_display.image = car_image
+
+                    except Exception as e:
+                        messagebox.showerror("Error", f"Failed to load image: {e}")
+
+    def manage_car_button(self,button):
+        match button:
+            case "insert":
+                self.image_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
+                if self.image_path:
+                    try:
+                        new_image = ctk.CTkImage(light_image=img.open(self.image_path),
+                                           size=(450 / 1707 * self.width, 300 / 1067 * self.height))
+                        self.image_display.configure(image=new_image)
+                        self.image_display.image = new_image
+
+                    except Exception as e:
+                        messagebox.showerror("Error", f"Failed to load image: {e}")
+            case "save":
+                registration_number = self.registration_number_entry.get()
+                model = self.model_entry.get()
+                capacity = self.capacity_entry.get()
+                transmission = self.transmission_entry.get()
+                manufacture_year = self.manufacture_year_entry.get()
+                price = self.price_entry.get()
+                if not self.image_path:
+                    messagebox.showwarning("Warning", "Please upload an image.")
+                    return
+
+                self.cursor.execute(f'SELECT * FROM CARS WHERE PLATE_NUMBER = \'{registration_number}\'')
+                if self.cursor.fetchone():
+                    messagebox.showwarning("Warning", "This registration number already exists.")
+                    return
+
+                self.cursor.execute(''' 
+                            INSERT INTO cars (PLATE_NUMBER, MODEL, CAPACITY, TRANSMISSION, MANUFACTURER_YEAR, PRICE, IMAGE, RATING)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        ''', (registration_number, model, capacity, transmission, manufacture_year, price, os.path.basename(self.image_path), 0))
+                self.sqliteConnection.commit()
+
+                pil_image = img.open(self.image_path)
+                pil_image.save("assets/cars/"+os.path.basename(self.image_path))
+
+                messagebox.showinfo("Success", "Data saved successfully!")
+                self.manage_car_button("refresh")
+            case "update":
+                if self.selected_car_id is not None:
+                    registration_number = self.registration_number_entry.get()
+                    model = self.model_entry.get()
+                    capacity = self.capacity_entry.get()
+                    transmission = self.transmission_entry.get()
+                    manufacture_year = self.manufacture_year_entry.get()
+                    price = self.price_entry.get()
+
+                    self.cursor.execute(''' 
+                               UPDATE CARS 
+                               SET PLATE_NUMBER = ?, MODEL = ?, CAPACITY = ?, TRANSMISSION = ?, MANUFACTURER_YEAR = ?, PRICE = ?
+                               WHERE CAR_ID = ?
+                           ''', (registration_number, model, capacity, transmission, manufacture_year, price, self.selected_car_id))
+                    self.sqliteConnection.commit()
+                    messagebox.showinfo("Success", "Car updated successfully!")
+                    self.manage_car_button("refresh")
+                    self.manage_car_button("clear")
+                else:
+                    messagebox.showwarning("Warning", "Please select a car to update.")
+            case "delete":
+                if self.selected_car_id is not None:
+                    confirm = messagebox.askyesno("Confirm Delete", "Are you sure you want to delete this car?")
+                    if confirm:
+                        self.cursor.execute('DELETE FROM CARS WHERE CAR_ID = ?', (self.selected_car_id,))
+                        self.sqliteConnection.commit()
+                        messagebox.showinfo("Success", "Car deleted successfully!")
+                        self.manage_car_button("refresh")
+                        self.manage_car_button("clear")
+                else:
+                    messagebox.showwarning("Warning", "Please select a car to delete.")
+            case "clear":
+                self.selected_car_id = None
+                self.registration_number_entry.delete(0, 'end')
+                self.model_entry.delete(0, 'end')
+                self.capacity_entry.delete(0, 'end')
+                self.transmission_entry.delete(0, 'end')
+                self.manufacture_year_entry.delete(0, 'end')
+                self.price_entry.delete(0, 'end')
+                self.image_display.configure(image="")
+            case "refresh":
+                for row in self.car_treeview.get_children():
+                    self.car_treeview.delete(row)
+
+                self.cursor.execute(
+                    'SELECT CAR_ID, PLATE_NUMBER, MODEL, CAPACITY, TRANSMISSION, MANUFACTURER_YEAR, PRICE FROM CARS')
+                rows = self.cursor.fetchall()
+
+                for row in rows:
+                    self.car_treeview.insert("", "end", values=row)
+
+
+    def manage_bookings(self):
+        # Background Image
+        background_image = ctk.CTkImage(img.open("assets/manage bookings ui.png"),
+                                        size=(self.width, self.height - 64))
+        background_image_label = ctk.CTkLabel(master=self.master.master, image=background_image, text="")
+        background_image_label.place(relx=0, rely=0)
+
+        # Left Box
+
+        # Booking ID
+        self.book_entry = ctk.CTkEntry(self.master, width=217 / 1280 * self.width,
+                                  height=34 / 720 * self.height, bg_color="white",
+                                  fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",state="disabled")
+        self.book_entry.place(x=351 / 1280 * self.width, y=75 / 720 * self.height)
+
+        # Customer Name
+        self.name_entry = ctk.CTkEntry(self.master, width=217 / 1280 * self.width,
+                                  height=34 / 720 * self.height, bg_color="white",
+                                  fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",state="disabled")
+        self.name_entry.place(x=351 / 1280 * self.width, y=115 / 720 * self.height)
+
+        # location
+        self.location_entry = ctk.CTkEntry(self.master, width=217 / 1280 * self.width,
+                                     height=34 / 720 * self.height, bg_color="white",
+                                     fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",state="disabled")
+        self.location_entry.place(x=351 / 1280 * self.width, y=154 / 720 * self.height)
+
+        # Start Date
+        self.start_entry = ctk.CTkEntry(self.master, width=217 / 1280 * self.width,
+                                   height=34 / 720 * self.height, bg_color="white",
+                                   fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",state="disabled")
+        self.start_entry.place(x=351 / 1280 * self.width, y=193 / 720 * self.height)
+
+        # End Date
+        self.end_entry = ctk.CTkEntry(self.master, width=217 / 1280 * self.width,
+                                 height=34 / 720 * self.height, bg_color="white",
+                                 fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",state="disabled")
+        self.end_entry.place(x=351 / 1280 * self.width, y=233 / 720 * self.height)
+
+        # Approved Button
+        self.app_button = ctk.CTkButton(self.master, text="Approve", bg_color="white", fg_color="#1572D3",
+                                   text_color="white",
+                                   border_color="#1572D3", width=87 / 1280 * self.width, height=32 / 588 * self.height,
+                                   font=("Poppins Medium", 18), command=lambda : self.confirm_booking("approve"))
+        self.app_button.place(x=541 / 1280 * self.width, y=328 / 720 * self.height)
+
+        # Right Box
+
+        # Model
+        self.model_entry = ctk.CTkEntry(self.master, width=217 / 1280 * self.width,
+                                   height=34 / 720 * self.height, bg_color="white",
+                                   fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",state="disabled")
+        self.model_entry.place(x=972 / 1280 * self.width, y=75 / 720 * self.height)
+
+        # Capacity
+        self.capacity_entry = ctk.CTkEntry(self.master, width=217 / 1280 * self.width,
+                                      height=34 / 720 * self.height, bg_color="white",
+                                      fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",state="disabled")
+        self.capacity_entry.place(x=972 / 1280 * self.width, y=115 / 720 * self.height)
+
+        # Transmission
+        self.mission_entry = ctk.CTkEntry(self.master, width=217 / 1280 * self.width,
+                                     height=34 / 720 * self.height, bg_color="white",
+                                     fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",state="disabled")
+        self.mission_entry.place(x=972 / 1280 * self.width, y=154 / 720 * self.height)
+
+        # Price
+        self.price_entry = ctk.CTkEntry(self.master, width=217 / 1280 * self.width,
+                                   height=34 / 720 * self.height, bg_color="white",
+                                   fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",state="disabled")
+        self.price_entry.place(x=972 / 1280 * self.width, y=193 / 720 * self.height)
+
+        # Status
+        self.status_entry = ctk.CTkEntry(self.master, width=217 / 1280 * self.width,
+                                    height=34 / 720 * self.height, bg_color="white",
+                                    fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",state="disabled")
+        self.status_entry.place(x=972 / 1280 * self.width, y=233 / 720 * self.height)
+
+        # Reject Button
+        self.reject_button = ctk.CTkButton(self.master, text="Reject", bg_color="white", fg_color="#1572D3",
+                                      text_color="white",
+                                      border_color="#1572D3", width=87 / 1280 * self.width,
+                                      height=32 / 588 * self.height,
+                                      font=("Poppins Medium", 18), command=lambda : self.confirm_booking("reject"))
+        self.reject_button.place(x=669 / 1280 * self.width, y=328 / 720 * self.height)
+
+        # Back Button
+        back_button = ctk.CTkButton(self.master, text="Back", bg_color="white", fg_color="#1572D3", text_color="white",
+                                    border_color="#1572D3", width=87 / 1280 * self.width, height=32 / 588 * self.height,
+                                    font=("Poppins Medium", 18),
+                                 command=self.admin_home)
+        back_button.place(x=46 / 1280 * self.width, y=588 / 720 * self.height)
+
+        # Treeview
+
+        style = ttk.Style()
+        style.theme_use("clam")
+        style.configure("Treeview.Heading", font=("Poppins Medium", 18), rowheight=100)
+        style.configure("Treeview", font=("Poppins", 16), rowheight=32 )
+        self.booking_treeview = ttk.Treeview(self.master, columns=("ID", "Customer Name","Start Date", "End Date", "Model", "Location", "Charge", "Status"),
+                                show="headings")
+
+        self.booking_treeview.heading("ID", text="ID")
+        self.booking_treeview.column("ID", width=round(8), anchor="center")
+
+        self.booking_treeview.heading("Customer Name", text="Customer Name")
+        self.booking_treeview.column("Customer Name", width=round(80), anchor="center")
+
+        self.booking_treeview.heading("Model", text="Model")
+        self.booking_treeview.column("Model", width=round(10), anchor="center")
+
+        self.booking_treeview.heading("Location", text="Location")
+        self.booking_treeview.column("Location", width=round(10), anchor="center")
+
+        self.booking_treeview.heading("Charge", text="Charge")
+        self.booking_treeview.column("Charge", width=round(10), anchor="center")
+
+        self.booking_treeview.heading("Start Date", text="Start Date")
+        self.booking_treeview.column("Start Date", width=round(50), anchor="center")
+
+        self.booking_treeview.heading("End Date", text="End Date")
+        self.booking_treeview.column("End Date", width=round(50), anchor="center")
+
+        self.booking_treeview.heading("Status", text="Status")
+        self.booking_treeview.column("Status", width=round(20), anchor="center")
+
+        self.booking_treeview.place(x=310, y=578, width=1453, height=365)
+
+        self.booking_treeview.bind("<<TreeviewSelect>>", self.select_booking)
+
+        # insert all current booking values
+        self.cursor.execute(
+            '''
+            SELECT BOOKING_ID, CONCAT(FIRST_NAME,' ',LAST_NAME), START_DATE, END_DATE, MODEL, LOCATION, TOTAL_CHARGE, STATUS FROM BOOKINGS
+            INNER JOIN USERS ON BOOKINGS.USER_ID = USERS.USER_ID
+            INNER JOIN CARS ON BOOKINGS.CAR_ID = CARS.CAR_ID
+            '''
+        )
+        for i in self.cursor.fetchall():
+            displayed_data = list(i)
+            print(displayed_data)
+            self.booking_treeview.insert("", "end", values=displayed_data)
+
+    def select_booking(self,event):
+        self.selected_booking = self.booking_treeview.selection()
+        if self.selected_booking:
+            item_values = self.booking_treeview.item(self.selected_booking, "values")
+
+            self.cursor.execute(f'''SELECT * FROM CARS 
+                                INNER JOIN BOOKINGS
+                                ON BOOKINGS.CAR_ID = CARS.CAR_ID
+                                WHERE BOOKINGS.BOOKING_ID = {item_values[0]}''')
+            car_data = self.cursor.fetchone()
+
+            self.name_entry.configure(state="normal")
+            self.name_entry.delete(0, 'end')
+            self.name_entry.insert(0, item_values[1])
+            self.name_entry.configure(state="disabled")
+
+            self.start_entry.configure(state="normal")
+            self.start_entry.delete(0, 'end')
+            self.start_entry.insert(0, item_values[2])
+            self.start_entry.configure(state="disabled")
+
+            self.end_entry.configure(state="normal")
+            self.end_entry.delete(0, 'end')
+            self.end_entry.insert(0, item_values[3])
+            self.end_entry.configure(state="disabled")
+
+            self.book_entry.configure(state="normal")
+            self.book_entry.delete(0, 'end')
+            self.book_entry.insert(0, item_values[0])
+            self.book_entry.configure(state="disabled")
+
+            self.mission_entry.configure(state="normal")
+            self.mission_entry.delete(0, 'end')
+            self.mission_entry.insert(0, car_data[7])
+            self.mission_entry.configure(state="disabled")
+
+            self.capacity_entry.configure(state="normal")
+            self.capacity_entry.delete(0, 'end')
+            self.capacity_entry.insert(0, car_data[5])
+            self.capacity_entry.configure(state="disabled")
+
+            self.status_entry.configure(state="normal")
+            self.status_entry.delete(0, 'end')
+            self.status_entry.insert(0, item_values[7])
+            self.status_entry.configure(state="disabled")
+
+            self.model_entry.configure(state="normal")
+            self.model_entry.delete(0, 'end')
+            self.model_entry.insert(0, item_values[7])
+            self.model_entry.configure(state="disabled")
+
+            self.location_entry.configure(state="normal")
+            self.location_entry.delete(0, 'end')
+            self.location_entry.insert(0, item_values[5])
+            self.location_entry.configure(state="disabled")
+
+            self.price_entry.configure(state="normal")
+            self.price_entry.delete(0, 'end')
+            self.price_entry.insert(0, item_values[6])
+            self.price_entry.configure(state="disabled")
+
+            if item_values[7]=="Pending":
+                self.app_button.configure(state="normal")
+                self.reject_button.configure(state="normal")
+            elif item_values[7]=="Approved":
+                self.app_button.configure(state="disabled")
+                self.reject_button.configure(state="normal")
+            elif item_values[7]=="Paid":
+                self.app_button.configure(state="disabled")
+                self.reject_button.configure(state="disabled")
+            else:
+                self.app_button.configure(state="disabled")
+                self.reject_button.configure(state="disabled")
+
+    def confirm_booking(self, mode):
+        item_values = self.booking_treeview.item(self.selected_booking, "values")
+        if mode=="approve":
+            self.cursor.execute("UPDATE BOOKINGS SET STATUS = 'Approved' WHERE BOOKING_ID = ?", item_values[0])
+            messagebox.showinfo("Approved","Booking approved. Confirmation email sent")
+            self.status_entry.configure(state="normal")
+            self.status_entry.delete(0, 'end')
+            self.status_entry.insert(0, "Approved")
+            self.status_entry.configure(state="disabled")
+        else:
+            self.cursor.execute("UPDATE BOOKINGS SET STATUS = 'Rejected', CURRENT_BOOKING = 0 WHERE BOOKING_ID = ?", item_values[0])
+            messagebox.showinfo("Rejected", "Booking rejected. Rejection email sent")
+            self.status_entry.configure(state="normal")
+            self.status_entry.delete(0, 'end')
+            self.status_entry.insert(0, "Rejected")
+            self.status_entry.configure(state="disabled")
+
+        self.sqliteConnection.commit()
+
+        for row in self.booking_treeview.get_children():
+            self.booking_treeview.delete(row)
+
+        self.cursor.execute(
+            '''
+            SELECT BOOKING_ID, CONCAT(FIRST_NAME,' ',LAST_NAME), START_DATE, END_DATE, MODEL, LOCATION, TOTAL_CHARGE, STATUS FROM BOOKINGS
+            INNER JOIN USERS ON BOOKINGS.USER_ID = USERS.USER_ID
+            INNER JOIN CARS ON BOOKINGS.CAR_ID = CARS.CAR_ID
+            '''
+        )
+        for i in self.cursor.fetchall():
+            self.booking_treeview.insert("", "end", values=i)
+
+        if mode=="approve":
+            self.app_button.configure(state="disabled")
+            self.reject_button.configure(state="normal")
+        elif mode=="reject":
+            self.app_button.configure(state="disabled")
+            self.reject_button.configure(state="disabled")
