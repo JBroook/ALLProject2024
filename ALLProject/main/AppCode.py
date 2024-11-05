@@ -13,6 +13,7 @@ from tkcalendar import Calendar
 from reportlab.pdfgen import canvas
 from datetime import date, datetime
 import time
+import bcrypt
 
 pyglet.font.add_file("assets/fonts/Poppins-SemiBold.ttf")
 pyglet.font.add_file("assets/fonts/Poppins-Light.ttf")
@@ -92,10 +93,11 @@ class App:
         self.cursor.execute("SELECT * FROM USERS WHERE USERNAME = 'Admin';")
         result = self.cursor.fetchall()
         if len(result)==0:
+            admin_password = bcrypt.hashpw("Admin@1234".encode(), bcrypt.gensalt())
             self.cursor.execute('''
             INSERT INTO USERS (USERNAME, EMAIL, USER_PASSWORD, FIRST_NAME, LAST_NAME, DATE_OF_BIRTH)
             VALUES (?, ?, ?, ?, ?, ?)
-            ''', ("Admin","jeremiahboey@gmail.com","Admin@1234","Admin","Account","2000-01-01"))
+            ''', ("Admin","jeremiahboey@gmail.com",admin_password,"Admin","Account","2000-01-01"))
 
         self.sqliteConnection.commit()
         self.master.bind("<KeyRelease>", self.login_enter)
@@ -243,7 +245,7 @@ class App:
         result = self.cursor.fetchall()
         if len(result):
             user = result[0]
-            if user[3] == self.password.get():
+            if bcrypt.checkpw(self.password.get().encode(), user[3]):
                 if user[1]!="Admin":
                     self.user_info["first name"] = user[4]
                     self.user_info["last name"] = user[5]
@@ -315,6 +317,17 @@ class App:
             self.verification_code = ctk.StringVar()
             ctk.CTkEntry(self.newWindow,textvariable=self.verification_code).pack()
             ctk.CTkButton(self.newWindow,text="Submit",command=self.check_verification).pack()
+
+            # Encrypt the password
+            hashed_password = bcrypt.hashpw(self.newPassword.get().encode(), bcrypt.gensalt())
+
+            # Store user details with hashed password in the database
+            self.cursor.execute('''
+                            INSERT INTO USERS (USERNAME, EMAIL, USER_PASSWORD, FIRST_NAME, LAST_NAME, DATE_OF_BIRTH)
+                            VALUES (?, ?, ?, ?, ?, ?)
+                        ''', (self.newUsername.get(), self.newEmail.get(), hashed_password,
+                              self.newFirstName.get(), self.newLastName.get(), self.newDOB.get()))
+            self.sqliteConnection.commit()
 
     def login_enter(self, event):
         if event.keysym == "Return":
