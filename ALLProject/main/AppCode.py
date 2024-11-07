@@ -1522,7 +1522,18 @@ class App:
         past_rentals_ui_label.place(relx=0, rely=0, anchor="nw")
 
         #get performance info
-        # self.cursor.execute("SELECT TOTAL_PRICE FROM BOOKINGS WHERE ")
+        # self.cursor.execute("SELECT  FROM BOOKINGS WHERE ")
+        # SELECT
+        # SUM(TOTAL_CHARGE)
+        # FROM
+        # BOOKINGS
+        # INNER
+        # JOIN
+        # PAYMENTS
+        # ON
+        # BOOKINGS.BOOKING_ID = PAYMENTS.BOOKING_ID
+        # WHERE
+        # PAYMENTS.DATE_PAID = '04-11-2024';
         # today_income = self.cursor.fetchall()
         today_income = 2200
 
