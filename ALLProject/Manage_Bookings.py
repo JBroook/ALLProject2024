@@ -2,7 +2,9 @@ from tkinter import ttk
 import customtkinter
 from PIL import Image
 import sqlite3
-
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # Connect to the Database
 def connect_db():
@@ -65,10 +67,36 @@ end_entry = customtkinter.CTkEntry(root, width=217/1280*root.winfo_screenwidth()
                                      fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black")
 end_entry.place(x=351/1280*root.winfo_screenwidth(),y=233/720*root.winfo_screenheight())
 
+#Email Verification
+def send_approved_email():
+    sender_email = ""
+    receiver_email = ""
+    password = ""
+
+    #Create the email
+    subject = "Your Booking is Approved"
+    body = "Hi There,\n\n You Booking was Approved.\n\n Thank you for choosing our car rental service"
+
+    msg = MIMEMultipart()
+    msg["From"] = sender_email
+    msg["To"] = receiver_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body,"plain"))
+
+    try:
+        with smtplib.SMTP("smtp.gmail.com",587) as server:
+            server.starttls()
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, msg.as_string())
+        messagebox.showinfo("Success", "Confirmation Email sent Successfully!")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to send the Confirmation email: {e}")
+
+
 #Approved Button
 app_button = customtkinter.CTkButton(root,text = "Approve" ,bg_color= "white", fg_color="#1572D3",text_color="white",
             border_color="#1572D3", width=87/1280*root.winfo_screenwidth(), height=32/588*root.winfo_screenheight(),
-                                      font=("Poppins Medium",18))
+                                      font=("Poppins Medium",18), command = send_approved_email)
 app_button.place(x=541/1280*root.winfo_screenwidth(),y=328/720*root.winfo_screenheight())
 
 
@@ -104,10 +132,36 @@ status_entry = customtkinter.CTkEntry(root, width=217/1280*root.winfo_screenwidt
                                      fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black")
 status_entry.place(x=972/1280*root.winfo_screenwidth(),y=233/720*root.winfo_screenheight())
 
+#Email Verification
+def send_reject_email():
+    sender_email = ""
+    receiver_email = ""
+    password = ""
+
+    #Create the email
+    subject = "You Booking Was Rejected"
+    body = "Hi There,\n\n You Booking was Rejected by the admin.\n\n Don't Worry You can book other cars"
+
+    msg = MIMEMultipart()
+    msg["From"] = sender_email
+    msg["To"] = receiver_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body,"plain"))
+
+    try:
+        with smtplib.SMTP("smtp.gmail.com",587) as server:
+            server.starttls()
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, msg.as_string())
+        messagebox.showinfo("Success", "Rejected Email sent Successfully!")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to send the Rejected Email: {e}")
+
+
 #Reject Button
 reject_button = customtkinter.CTkButton(root,text = "Reject" ,bg_color= "white", fg_color="#1572D3",text_color="white",
             border_color="#1572D3", width=87/1280*root.winfo_screenwidth(), height=32/588*root.winfo_screenheight(),
-                                      font=("Poppins Medium",18))
+                                      font=("Poppins Medium",18), command = send_reject_email)
 reject_button.place(x=669/1280*root.winfo_screenwidth(),y=328/720*root.winfo_screenheight())
 
 
