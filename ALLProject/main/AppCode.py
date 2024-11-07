@@ -323,17 +323,6 @@ class App:
             ctk.CTkEntry(self.newWindow,textvariable=self.verification_code).pack()
             ctk.CTkButton(self.newWindow,text="Submit",command=self.check_verification).pack()
 
-            # Encrypt the password
-            hashed_password = bcrypt.hashpw(self.newPassword.get().encode(), bcrypt.gensalt())
-
-            # Store user details with hashed password in the database
-            self.cursor.execute('''
-                            INSERT INTO USERS (USERNAME, EMAIL, USER_PASSWORD, FIRST_NAME, LAST_NAME, DATE_OF_BIRTH)
-                            VALUES (?, ?, ?, ?, ?, ?)
-                        ''', (self.newUsername.get(), self.newEmail.get(), hashed_password,
-                              self.newFirstName.get(), self.newLastName.get(), self.newDOB.get()))
-            self.sqliteConnection.commit()
-
     def login_enter(self, event):
         if event.keysym == "Return" and self.user_info["id"]==-1:
             self.test_credentials()
@@ -387,12 +376,15 @@ class App:
 
     def check_verification(self):
         if self.verification_code.get()==self.random_code:
+            # Encrypt the password
+            hashed_password = bcrypt.hashpw(self.newPassword.get().encode(), bcrypt.gensalt())
+
+            # Store user details with hashed password in the database
             self.cursor.execute('''
-                INSERT INTO USERS (USERNAME, EMAIL, USER_PASSWORD, FIRST_NAME, LAST_NAME, DATE_OF_BIRTH)
-                VALUES(?, ?, ?, ?, ?, ?)''',
-                (self.newUsername.get(), self.newEmail.get(), self.newPassword.get(),
-                 self.newFirstName.get(), self.newLastName.get(), self.newDOB.get())
-            )
+                                        INSERT INTO USERS (USERNAME, EMAIL, USER_PASSWORD, FIRST_NAME, LAST_NAME, DATE_OF_BIRTH)
+                                        VALUES (?, ?, ?, ?, ?, ?)
+                                    ''', (self.newUsername.get(), self.newEmail.get(), hashed_password,
+                                          self.newFirstName.get(), self.newLastName.get(), self.newDOB.get()))
             self.sqliteConnection.commit()
             self.newWindow.destroy()
             self.login()
