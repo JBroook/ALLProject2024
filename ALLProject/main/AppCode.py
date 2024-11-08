@@ -45,6 +45,15 @@ def check_filter_options(dictionary, array):
                     if array[3] < 200: return False
 
         i += 1
+
+    conn = sql.connect("DriveEase.db")
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT CAR_ID FROM BOOKINGS WHERE CAR_ID = {array[0]} AND (STATUS = \'Approved\' OR STATUS = \'Paid\')")
+    if cursor.fetchall():
+        return False
+
+    conn.close()
+
     return True
 
 class App:
@@ -911,7 +920,7 @@ class App:
                                  height=47 / 864 * self.height, bg_color="white",
                                  fg_color="#1572D3", text="Back", text_color="white",
                                  font=("Poppins Light", 24),
-                                 command=self.rental_page)
+                                 command=self.rental_page if not current else self.current_booking)
         back_btn.place(x=55 / 1536 * self.width, y=717 / 864 * self.height,
                        anchor="nw")
 
@@ -921,14 +930,14 @@ class App:
 
         if self.pickup_location.get()=="" or self.pickup_date.get()=="" or self.return_date.get()=="":
             messagebox.showerror("Empty field", "Please fill in all fields")
-        elif time.strptime(self.pickup_date.get(),"%d-%m-%Y")<time.strptime(date.today().strftime('%d-%m-%Y'),'%d-%m-%Y'):
+        elif time.strptime(self.pickup_date.get(),"%Y-%m-%d")<time.strptime(date.today().strftime('%Y-%m-%d'),'%Y-%m-%d'):
             messagebox.showerror("Invalid start date", "Your selected start date is invalid.\nTry again.")
-        elif time.strptime(self.return_date.get(),"%d-%m-%Y")<time.strptime(self.pickup_date.get(),"%d-%m-%Y"):
+        elif time.strptime(self.return_date.get(),"%Y-%m-%d")<time.strptime(self.pickup_date.get(),"%Y-%m-%d"):
             messagebox.showerror("Invalid return date", "Your selected return date is invalid.\nTry again.")
         elif len(current_bookings):
             messagebox.showerror("Another booking is active", "You already have an active booking")
         else:
-            days_rented = datetime.strptime(self.return_date.get(), "%d-%m-%Y")-datetime.strptime(self.pickup_date.get(), "%d-%m-%Y")
+            days_rented = datetime.strptime(self.return_date.get(), "%Y-%m-%d")-datetime.strptime(self.pickup_date.get(), "%Y-%m-%d")
             self.cursor.execute(f"SELECT PRICE FROM CARS WHERE CAR_ID = {car_id}")
             total_charge = self.cursor.fetchone()[0]*days_rented.days
             # print(total_charge)
@@ -960,15 +969,15 @@ class App:
     def update_booking(self, booking_id):
         if self.pickup_location.get() == "" or self.pickup_date.get() == "" or self.return_date.get() == "":
             messagebox.showerror("Empty field", "Please fill in all fields")
-        elif time.strptime(self.pickup_date.get(), "%d-%m-%Y") < time.strptime(date.today().strftime('%d-%m-%Y'),
-                                                                               '%d-%m-%Y'):
+        elif time.strptime(self.pickup_date.get(), "%Y-%m-%d") < time.strptime(date.today().strftime('%Y-%m-%d'),
+                                                                               '%Y-%m-%d'):
             messagebox.showerror("Invalid start date", "Your selected start date is invalid.\nTry again.")
-        elif time.strptime(self.return_date.get(), "%d-%m-%Y") < time.strptime(self.pickup_date.get(), "%d-%m-%Y"):
+        elif time.strptime(self.return_date.get(), "%Y-%m-%d") < time.strptime(self.pickup_date.get(), "%Y-%m-%d"):
             messagebox.showerror("Invalid return date", "Your selected return date is invalid.\nTry again.")
         else:
             self.cursor.execute(f"SELECT CAR_ID FROM BOOKINGS WHERE BOOKING_ID = {booking_id}")
             car_id = self.cursor.fetchone()[0]
-            days_rented = datetime.strptime(self.return_date.get(), "%d-%m-%Y") - datetime.strptime(self.pickup_date.get(), "%d-%m-%Y")
+            days_rented = datetime.strptime(self.return_date.get(), "%Y-%m-%d") - datetime.strptime(self.pickup_date.get(), "%Y-%m-%d")
             self.cursor.execute(f"SELECT PRICE FROM CARS WHERE CAR_ID = {car_id}")
             total_charge = self.cursor.fetchone()[0] * days_rented.days
             self.cursor.execute(
@@ -990,21 +999,21 @@ class App:
                 self.current_calendar = "pickup"
                 self.pickup_date_calendar = Calendar(
                     self.master, selectmode='day',
-                    showweeknumbers=False, cursor="hand2", date_pattern='dd-mm-y',
+                    showweeknumbers=False, cursor="hand2", date_pattern='y-mm-dd',
                     borderwidth=0, bordercolor='white',
                     font="Poppins 16"
                 )
-                self.pickup_date_calendar.place(x=1300, y=600, anchor="nw")
+                self.pickup_date_calendar.place(x=1300/1536*self.width, y=600/864*self.height, anchor="nw")
             case "create return":
                 self.pickup_date_button.configure(state="disabled")
                 self.current_calendar = "return"
                 self.return_date_calendar = Calendar(
                     self.master, selectmode='day',
-                    showweeknumbers=False, cursor="hand2", date_pattern='dd-mm-y',
+                    showweeknumbers=False, cursor="hand2", date_pattern='y-mm-dd',
                     borderwidth=0, bordercolor='white',
                     font="Poppins 16"
                 )
-                self.return_date_calendar.place(x=1300, y=650, anchor="nw")
+                self.return_date_calendar.place(x=1300/1536*self.width, y=650/864*self.height, anchor="nw")
             case "change":
                 if self.current_calendar=="pickup":
                     self.pickup_date_button.configure(text=self.pickup_date_calendar.get_date())
@@ -1047,7 +1056,7 @@ class App:
         for all_details in booking_list:
             print("deets",all_details)
             if all_details[5]==self.user_info["id"]:
-                if time.strptime(all_details[2],"%d-%m-%Y")<time.strptime(date.today().strftime('%d-%m-%Y'),'%d-%m-%Y') or all_details[6]==0:
+                if time.strptime(all_details[2],"%Y-%m-%d")<time.strptime(date.today().strftime('%Y-%m-%d'),'%Y-%m-%d') or all_details[6]==0:
                     self.cursor.execute(f"UPDATE BOOKINGS SET CURRENT_BOOKING = 0 WHERE BOOKING_ID = {all_details[0]}")
                     self.sqliteConnection.commit()
                 else:
@@ -1217,6 +1226,8 @@ class App:
                                        bg_color="white", fg_color="#1572D3", text="Cancel", text_color="#FFFFFF",
                                        font=("Poppins", 24),command=lambda : self.prompt_cancel(booking[0]))
             cancel_btn.place(x=1273 / 1707 * self.width, y=621.08 / 1067 * self.height, anchor="nw")
+            if booking[7]=="Paid":
+                update_btn.configure(state="disabled")
 
             if booking[7]=="Approved":
                 pay_btn = ctk.CTkButton(self.master, width=153 / 1707 * self.width, height=54.4 / 1067 * self.height,
@@ -1335,19 +1346,35 @@ class App:
     def confirm_payment(self, booking_id):
         name = self.cardholder_name_entry.get()
         number = self.number_entry.get().strip()
-        date = self.expiry_entry.get().strip()
+        expiry_date = self.expiry_entry.get().strip()
         code = self.cvc_entry.get().strip()
+        self.cursor.execute(f"SELECT TOTAL_CHARGE FROM BOOKINGS WHERE BOOKING_ID = {booking_id}")
+        charge = self.cursor.fetchone()
 
         # Validate input
-        if not name or not number or not date or not code:
+        if not name or not number or not expiry_date or not code:
             messagebox.showerror("Error", "All fields are required!")
         else:
-            self.cursor.execute("INSERT INTO PAYMENTS (NAME, CARD_NUMBER, EXPIRY, CVC, BOOKING_ID) "
-                      "VALUES (?, ?, ?, ?, ?)", (name, number, date, code, booking_id))
+            self.cursor.execute("INSERT INTO PAYMENTS (NAME, CARD_NUMBER, EXPIRY, CVC, BOOKING_ID, DATE_PAID) "
+                      "VALUES (?, ?, ?, ?, ?, ?)", (name, number, expiry_date, code, booking_id, date.today().strftime("%Y-%m-%d")))
             self.cursor.execute(f"UPDATE BOOKINGS SET STATUS = \'Paid\' WHERE BOOKING_ID = {booking_id}")
             self.sqliteConnection.commit()
             messagebox.showinfo("Success", "Payment successful!")
             self.current_booking()
+
+            msg = EmailMessage()
+            self.random_code = ''.join(random.choices(string.ascii_letters, k=6))
+            # print(self.random_code)
+            msg.set_content(f"Thank you for purchasing with DriveEase!\nYour payment of RM{charge[0]:.2f} has been successfully made under the card ending in {number[len(number)-4:]}")
+            msg['Subject'] = 'DriveEase Verification Code'
+            msg['From'] = "jeremiahboey@gmail.com"
+            msg['To'] = self.user_info["email"]
+
+            s = smtplib.SMTP('smtp.gmail.com', 587)
+            s.starttls()
+            s.login("jeremiahboey@gmail.com", "kqlv jfry sdet zszi")
+            s.send_message(msg)
+            s.quit()
 
     def rating_page(self, all_details, rating_done):
         print(all_details)

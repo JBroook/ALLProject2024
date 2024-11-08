@@ -1,6 +1,5 @@
 import sqlite3 as sql
 
-
 conn = sql.connect("DriveEase.db")
 cursor = conn.cursor()
 
@@ -17,7 +16,8 @@ cursor.execute(
         CAPACITY INTEGER NOT NULL,
         RATING INTEGER,
         TRANSMISSION VARCHAR(255) NOT NULL,
-        PLATE_NUMBER VARCHAR(10) NOT NULL
+        PLATE_NUMBER VARCHAR(10) NOT NULL,
+        RATING_COUNT INTEGER NOT NULL
     )
     '''
 )
@@ -32,7 +32,8 @@ car_list = [
         "capacity" : 5,
         "rating" : 4.5,
         "transmission" : "Auto",
-        "plate_number" : "PPZ 1023"
+        "plate_number" : "PPZ 1023",
+
     },
 
     {
