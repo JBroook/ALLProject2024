@@ -192,7 +192,7 @@ class App:
             self.master,text="Forgot password?",
             bg_color="white",fg_color="white",text_color="#1572D3",
             width=100/1536*self.width,height=20/864*self.height,hover_color="grey",
-            font=("Poppins Medium",10/864*self.height),command=self.get_username
+            font=("Poppins Medium",10/864*self.height),command=self.get_email
         )
         forgotPasswordButton.place(x=185/1536*self.width,y=540/864*self.height)
 
@@ -225,34 +225,29 @@ class App:
         )
         registerButton.place(x=401/1536*self.width,y=600/864*self.height,anchor="nw")
 
-    def get_username(self):
+    def get_email(self):
         self.newWindow = ctk.CTkToplevel(self.master)
         # sets the title of the
         # Toplevel widget
-        self.newWindow.title("Enter username")
+        self.newWindow.title("Enter email")
 
         # sets the geometry of toplevel
         self.newWindow.geometry("400x200")
 
         # A Label widget to show in toplevel
-        ctk.CTkLabel(self.newWindow, text="Enter your username").pack()
-        self.recovery_username = ctk.StringVar()
-        ctk.CTkEntry(self.newWindow, textvariable=self.recovery_username).pack()
+        ctk.CTkLabel(self.newWindow, text="Enter your email\nA verification code will be sent").pack()
+        self.recovery_email = ctk.StringVar()
+        ctk.CTkEntry(self.newWindow, textvariable=self.recovery_email).pack()
         ctk.CTkButton(self.newWindow, text="Submit", command=self.reset_password).pack()
 
     def reset_password(self, valid=False):
         if not valid:
             self.newWindow.destroy()
-            self.cursor.execute("SELECT EMAIL FROM USERS WHERE USERNAME = ?",(self.recovery_username.get(),))
-            email = self.cursor.fetchone()[0]
-            if not email:
-                messagebox.showerror("Error", "Invalid username")
-                return None  # break out and close window
-            elif not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', self.recovery_email.get()):
                 messagebox.showerror("Error","Invalid email")
                 return None #break out and close window
-            elif len(self.db_find_user(self.recovery_username.get()))==0:
-                messagebox.showerror("Error", "No user with this username found")
+            elif len(self.db_find_email(self.recovery_email.get()))==0:
+                messagebox.showerror("Error", "No user with this email found")
                 return None  # break out and close window
 
             msg = EmailMessage()
@@ -261,7 +256,7 @@ class App:
             msg.set_content("Thank you for registering with DriveEase.\nYour verification code is: " + self.random_code)
             msg['Subject'] = 'DriveEase Verification Code'
             msg['From'] = "jeremiahboey@gmail.com"
-            msg['To'] = email
+            msg['To'] = self.recovery_email.get()
 
             s = smtplib.SMTP('smtp.gmail.com', 587)
             s.starttls()
@@ -331,7 +326,7 @@ class App:
                 width=187 / 1536 * self.width,
                 height=57 / 864 * self.height,
                 font=("Poppins Medium", 18),
-                command=lambda : self.change_password(self.recovery_username.get())
+                command=lambda : self.change_password(self.recovery_email.get())
             )
             confirmButton.place(x=185 / 1536 * self.width, y=600 / 864 * self.height, anchor="nw")
 
@@ -345,7 +340,7 @@ class App:
             )
             back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
 
-    def change_password(self,username):
+    def change_password(self,email):
         if len(self.newResetPassword.get()) < 8:
             messagebox.showerror("Invalid Password","Password must be 8 characters minimum")
         elif not any(i.isdigit() for i in self.newResetPassword.get()):
@@ -355,8 +350,8 @@ class App:
         else:
             self.cursor.execute(
                 '''
-                UPDATE USERS SET USER_PASSWORD = ? WHERE USERNAME = ?
-                ''', (bcrypt.hashpw(self.newResetPassword.get().encode(), bcrypt.gensalt()),username)
+                UPDATE USERS SET USER_PASSWORD = ? WHERE EMAIL = ?
+                ''', (bcrypt.hashpw(self.newResetPassword.get().encode(), bcrypt.gensalt()),email)
             )
             self.sqliteConnection.commit()
             messagebox.showinfo("Success","Your password has been successfully reset")
@@ -405,13 +400,13 @@ class App:
         # Password
         self.newPassword = ctk.StringVar()
         password_entry = ctk.CTkEntry(self.master, placeholder_text="******", width=215/1536*self.width, height=34/864*self.height, bg_color="white",
-                                      fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",textvariable=self.newPassword)
+                                      fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",textvariable=self.newPassword,show="*")
         password_entry.place(x=390 / 1280 * self.width, y=262 / 720 * self.height)
 
         # Confirm Password
         self.confirmPassword = ctk.StringVar()
         confirm_entry = ctk.CTkEntry(self.master, placeholder_text="******", width=215/1536*self.width, height=34/864*self.height, bg_color="white",
-                                     fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",textvariable=self.confirmPassword)
+                                     fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",textvariable=self.confirmPassword,show="*")
         confirm_entry.place(x=390 / 1280 * self.width, y=343 / 720 * self.height)
 
         # Login Button
@@ -471,6 +466,8 @@ class App:
             error = "Username taken"
         elif not valid_email:
             error = "Email is invalid"
+        elif len(self.db_find_email(self.newEmail.get().lower())):
+            error = "Email already taken"
         elif len(self.newPassword.get())<8:
             error = "Password must be 8 characters minimum"
         elif not any(i.isdigit() for i in self.newPassword.get()):
@@ -1649,18 +1646,34 @@ class App:
                                  fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black")
         self.cvc_entry.place(x=650 / 1280 * self.width, y=400 / 720 * self.height)
 
+        self.cursor.execute(f'''SELECT START_DATE, END_DATE, PRICE FROM BOOKINGS INNER JOIN CARS ON BOOKINGS.CAR_ID = CARS.CAR_ID
+                            WHERE BOOKING_ID = {booking_id}''')
+        results = self.cursor.fetchone()
+        duration = (datetime.strptime(results[1],"%Y-%m-%d")-datetime.strptime(results[0],"%Y-%m-%d")).days+1
+        charge_label = ctk.CTkLabel(
+            self.master,text=f"RM{duration*results[2]:.2f}",
+            bg_color="white",fg_color="white",text_color="black",
+            font=("Poppins Medium",16)
+        )
+        charge_label.place(x=542/1536*self.width,y=580/864*self.height)
+
         # Pay Button
         confirm_button = ctk.CTkButton(self.master, text="Pay", bg_color="white", fg_color="Green", text_color="white",
                                        border_color="#1572D3", width=89 / 1280 * self.width,
                                        height=39 / 720 * self.height, font=("Poppins Medium", 18),
                                        command=lambda : self.confirm_payment(booking_id)
                                        )
-        confirm_button.place(x=450 / 1280 * self.width, y=512 / 720 * self.height)
+        confirm_button.place(x=450 / 1280 * self.width, y=550 / 720 * self.height)
 
-        bck_btn = ctk.CTkButton(self.master, width=171 / 1707 * self.width, height=69 / 1067 * self.height,
-                                bg_color="white", fg_color="#1572D3", text="Back", text_color="#FFFFFF",
-                                font=("Poppins", 24), command=self.current_booking)
-        bck_btn.place(x=61 / 1707 * self.width, y=879 / 1067 * self.height, anchor="nw")
+        # Back Button
+        back_button = ctk.CTkButton(
+            self.master, text="Back", bg_color="white", fg_color="#1572D3",
+            text_color="white",
+            border_color="#1572D3", width=89 / 1280 * self.width,
+            height=39 / 720 * self.height, font=("Poppins Medium", 18 / 1536 * self.width),
+            command=self.current_booking
+        )
+        back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
 
     def confirm_payment(self, booking_id):
         name = self.cardholder_name_entry.get()
@@ -1673,7 +1686,18 @@ class App:
         # Validate input
         if not name or not number or not expiry_date or not code:
             messagebox.showerror("Error", "All fields are required!")
+        elif not number.replace(" ","").isdigit():
+            messagebox.showerror("Error", "Card number is invalid")
+        elif not expiry_date.replace("/","").isdigit() or len(expiry_date)!=5:
+            messagebox.showerror("Error", "Expiry date is invalid")
+        elif not code.isdigit() or len(code)!=3:
+            messagebox.showerror("Error", "CVC code is invalid")
         else:
+            name = bcrypt.hashpw(name.encode(), bcrypt.gensalt())
+            number = bcrypt.hashpw(number.replace(" ","").encode(), bcrypt.gensalt())
+            expiry_date = bcrypt.hashpw(expiry_date.encode(), bcrypt.gensalt())
+            code = bcrypt.hashpw(code.encode(), bcrypt.gensalt())
+
             self.cursor.execute("INSERT INTO PAYMENTS (NAME, CARD_NUMBER, EXPIRY, CVC, BOOKING_ID, DATE_PAID) "
                       "VALUES (?, ?, ?, ?, ?, ?)", (name, number, expiry_date, code, booking_id, date.today().strftime("%Y-%m-%d")))
             self.cursor.execute(f"UPDATE BOOKINGS SET STATUS = \'Paid\' WHERE BOOKING_ID = {booking_id}")
@@ -2727,7 +2751,7 @@ class App:
             msg.set_content(f"Your booking with DriveEase has been approved by our Administrators!\n Please proceed to the Current Bookings page to make your payment!")
             msg['Subject'] = 'Your DriveEase Booking Has Been Approved!'
             msg['From'] = "jeremiahboey@gmail.com"
-            msg['To'] = self.newEmail.get()
+            msg['To'] = self.user_info["email"]
 
             s = smtplib.SMTP('smtp.gmail.com', 587)
             s.starttls()
