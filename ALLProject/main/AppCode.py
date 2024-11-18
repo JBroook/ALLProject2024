@@ -1,3 +1,4 @@
+import math
 import os
 import pickle
 from tkinter import messagebox, ttk, filedialog
@@ -11,6 +12,7 @@ import smtplib
 from email.message import EmailMessage
 import string, random
 import pyglet
+from PIL.ImageOps import expand
 from tkcalendar import Calendar
 from reportlab.pdfgen import canvas
 from datetime import date, datetime
@@ -55,6 +57,32 @@ def check_filter_options(dictionary, array):
     conn.close()
 
     return True
+
+def check_response(message, user_id):
+    match message:
+        case "I want to confirm a booking.":
+            conn = sql.connect("DriveEase.db")
+            cursor = conn.cursor()
+            cursor.execute(f"SELECT STATUS FROM BOOKINGS WHERE USER_ID = {user_id} AND CURRENT_BOOKING = 1")
+            status = cursor.fetchone()
+            if status:
+                if status[0]=="Pending":
+                    return "Your booking has been logged in our database and is pending approval from an Administrator! This process will complete within 1 business day."
+                elif status[0]=="Approved":
+                    return "Your booking has already been approved by an Administrator, please proceed to the Home Page>My Bookings>Current Bookings to pay for your rental!"
+                elif status[0] == "Paid":
+                    return "The payment for your current booking has already been confirmed! Enjoy your ride!"
+            else:
+                return "No active bookings have been found in our database. Ensure that you have confirmed your selection in the rental page first"
+        case "How do I pay for my rental?":
+            return "You can pay for your active booking by heading to Homepage>My Bookings>Current Booking and clicking the “Pay” button. The \"Pay\" button will appear once our status is \"Approved\" "
+        case "When will my booking be approved?":
+            return "The Administrator has been notified of your booking request and will approve/reject your booking soon. This process usually occurs within one business day after the booking request has been made."
+        case "Why was my booking rejected?":
+            return "Your booking can be rejected for a variety of reasons. These include, but are not limited to: Your booking duration was too long, your account reputation is too low, the requested vehicle is not available."
+        case "I want to talk to a live operator":
+            return "I understand. Please message the following number (+60102433090) on WhatsApp or email us at [email] for more support"
+
 
 class App:
     def __init__(self, master):
@@ -159,6 +187,15 @@ class App:
         )
         passwordEntry.place(x=186/1536*self.width,y=484/864*self.height,anchor="nw")
 
+        #forgot password
+        forgotPasswordButton = ctk.CTkButton(
+            self.master,text="Forgot password?",
+            bg_color="white",fg_color="white",text_color="#1572D3",
+            width=100/1536*self.width,height=20/864*self.height,hover_color="grey",
+            font=("Poppins Medium",10/864*self.height),command=self.get_username
+        )
+        forgotPasswordButton.place(x=185/1536*self.width,y=540/864*self.height)
+
         # login/register frame
         loginButton = ctk.CTkButton(
             self.master,
@@ -172,7 +209,7 @@ class App:
             height=57/864*self.height,
             font=("Poppins Medium",18)
         )
-        loginButton.place(x=185/1536*self.width,y=583/864*self.height,anchor="nw")
+        loginButton.place(x=185/1536*self.width,y=600/864*self.height,anchor="nw")
 
         registerButton = ctk.CTkButton(
             self.master,
@@ -186,7 +223,144 @@ class App:
             height=57/864*self.height,
             font=("Poppins Medium",18)
         )
-        registerButton.place(x=401/1536*self.width,y=583/864*self.height,anchor="nw")
+        registerButton.place(x=401/1536*self.width,y=600/864*self.height,anchor="nw")
+
+    def get_username(self):
+        self.newWindow = ctk.CTkToplevel(self.master)
+        # sets the title of the
+        # Toplevel widget
+        self.newWindow.title("Enter username")
+
+        # sets the geometry of toplevel
+        self.newWindow.geometry("400x200")
+
+        # A Label widget to show in toplevel
+        ctk.CTkLabel(self.newWindow, text="Enter your username").pack()
+        self.recovery_username = ctk.StringVar()
+        ctk.CTkEntry(self.newWindow, textvariable=self.recovery_username).pack()
+        ctk.CTkButton(self.newWindow, text="Submit", command=self.reset_password).pack()
+
+    def reset_password(self, valid=False):
+        if not valid:
+            self.newWindow.destroy()
+            self.cursor.execute("SELECT EMAIL FROM USERS WHERE USERNAME = ?",(self.recovery_username.get(),))
+            email = self.cursor.fetchone()[0]
+            if not email:
+                messagebox.showerror("Error", "Invalid username")
+                return None  # break out and close window
+            elif not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+                messagebox.showerror("Error","Invalid email")
+                return None #break out and close window
+            elif len(self.db_find_user(self.recovery_username.get()))==0:
+                messagebox.showerror("Error", "No user with this username found")
+                return None  # break out and close window
+
+            msg = EmailMessage()
+            self.random_code = ''.join(random.choices(string.ascii_letters, k=6))
+            # print(self.random_code)
+            msg.set_content("Thank you for registering with DriveEase.\nYour verification code is: " + self.random_code)
+            msg['Subject'] = 'DriveEase Verification Code'
+            msg['From'] = "jeremiahboey@gmail.com"
+            msg['To'] = email
+
+            s = smtplib.SMTP('smtp.gmail.com', 587)
+            s.starttls()
+            s.login("jeremiahboey@gmail.com", "kqlv jfry sdet zszi")
+            s.send_message(msg)
+            s.quit()
+
+            self.newWindow = ctk.CTkToplevel(self.master)
+
+            # sets the title of the
+            # Toplevel widget
+            self.newWindow.title("Confirm your email")
+
+            # sets the geometry of toplevel
+            self.newWindow.geometry("400x200")
+
+            # A Label widget to show in toplevel
+            ctk.CTkLabel(self.newWindow, text="Enter your verification code").pack()
+            self.verification_code = ctk.StringVar()
+            ctk.CTkEntry(self.newWindow, textvariable=self.verification_code).pack()
+            ctk.CTkButton(self.newWindow, text="Submit", command=self.check_password_token).pack()
+        else :
+            for i in self.master.winfo_children():
+                i.destroy()
+            # bg image
+            forgot_password_ui = ctk.CTkImage(light_image=img.open("assets/reset password ui.png"), size=(self.width, self.height-64))
+            forgot_password_ui_label = ctk.CTkLabel(master=self.master, image=forgot_password_ui, text="")
+            forgot_password_ui_label.place(relx=0, rely=0, anchor="nw")
+
+            self.newResetPassword = ctk.StringVar()
+            newPasswordEntry = ctk.CTkEntry(master=self.master,
+                                         textvariable=self.newResetPassword,
+                                         width=402 / 1536 * self.width,
+                                         height=54 / 864 * self.height,
+                                         bg_color="white",
+                                         fg_color="#D9D9D9",
+                                         border_color="#D9D9D9",
+                                         text_color="black",
+                                         font=("Poppins Light", 24),
+                                         show="*"
+                                         )
+            newPasswordEntry.place(x=186 / 1536 * self.width, y=375 / 864 * self.height, anchor="nw")
+
+            self.newConfirmPassword = ctk.StringVar()
+            confirmPasswordEntry = ctk.CTkEntry(
+                self.master,
+                textvariable=self.newConfirmPassword,
+                width=402 / 1536 * self.width,
+                height=54 / 864 * self.height,
+                bg_color="white",
+                fg_color="#D9D9D9",
+                border_color="#D9D9D9",
+                text_color="black",
+                font=("Poppins Light", 24),
+                show="*"
+            )
+            confirmPasswordEntry.place(x=186 / 1536 * self.width, y=484 / 864 * self.height, anchor="nw")
+
+            # login/register frame
+            confirmButton = ctk.CTkButton(
+                self.master,
+                text="Confirm",
+                bg_color="white",
+                fg_color="#1572D3",
+                text_color="white",
+                border_color="#1572D3",
+                width=187 / 1536 * self.width,
+                height=57 / 864 * self.height,
+                font=("Poppins Medium", 18),
+                command=lambda : self.change_password(self.recovery_username.get())
+            )
+            confirmButton.place(x=185 / 1536 * self.width, y=600 / 864 * self.height, anchor="nw")
+
+            # Back Button
+            back_button = ctk.CTkButton(
+                self.master, text="Back", bg_color="white", fg_color="#1572D3",
+                text_color="white",
+                border_color="#1572D3", width=89 / 1280 * self.width,
+                height=39 / 720 * self.height, font=("Poppins Medium", 18 / 1536 * self.width),
+                command=self.login
+            )
+            back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
+
+    def change_password(self,username):
+        if len(self.newResetPassword.get()) < 8:
+            messagebox.showerror("Invalid Password","Password must be 8 characters minimum")
+        elif not any(i.isdigit() for i in self.newResetPassword.get()):
+            messagebox.showerror("Invalid Password","Password must contain at least one digit")
+        elif self.newResetPassword.get() != self.newConfirmPassword.get():
+            messagebox.showerror("Invalid Password","Passwords do not match")
+        else:
+            self.cursor.execute(
+                '''
+                UPDATE USERS SET USER_PASSWORD = ? WHERE USERNAME = ?
+                ''', (bcrypt.hashpw(self.newResetPassword.get().encode(), bcrypt.gensalt()),username)
+            )
+            self.sqliteConnection.commit()
+            messagebox.showinfo("Success","Your password has been successfully reset")
+            self.login()
 
 
     def register(self):
@@ -276,6 +450,11 @@ class App:
 
     def db_find_user(self, _username):
         query = f"SELECT * FROM USERS WHERE USERNAME = \'{_username}\';"
+        self.cursor.execute(query)
+        return self.cursor.fetchall()
+
+    def db_find_email(self, _email):
+        query = f"SELECT * FROM USERS WHERE EMAIL = \'{_email}\';"
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
@@ -383,6 +562,101 @@ class App:
         )
         book_button.place(x=1210/1536*self.width, y=673/864*self.height, anchor="nw")
 
+        help_button = ctk.CTkButton(
+            master=self.master,
+            text="?",
+            width=49 / 1536 * self.width,
+            height=49 / 864 * self.height,
+            font=("Poppins Medium", 26),
+            bg_color="#FFFFFF",
+            fg_color="#1572D3",
+            text_color="white",
+            command=self.help_page
+        )
+        help_button.place(x=29 / 1536 * self.width, y=720 / 864 * self.height, anchor="nw")
+
+    def help_page(self):
+        for i in self.master.winfo_children():
+            i.destroy()
+
+        chat_history = ["Hi, there! How may I help you?"]
+
+        help_page_ui = ctk.CTkImage(light_image=img.open("assets/help page ui.png"), size=(self.width, self.height - 64))
+        help_page_ui_label = ctk.CTkLabel(self.master, image=help_page_ui, text="")
+        help_page_ui_label.place(relx=0, rely=0, anchor="nw")
+
+        self.chat_log_frame = ctk.CTkScrollableFrame(
+            self.master,bg_color="white",fg_color="#D9D9D9",
+            width=750/1536*self.width,height=500/864*self.height
+        )
+        self.chat_log_frame.place(x=300/1536*self.width,y=164/864*self.height)
+
+        self.add_message("DriveEase Assistant",chat_history[0])
+        
+
+        option_frame = ctk.CTkScrollableFrame(
+            self.master, bg_color="white", fg_color="#D9D9D9",
+            width=300/1536*self.width, height=500/864*self.height
+        )
+        option_frame.place(x=1090/1536*self.width, y=164/864*self.height)
+
+        option_list = [
+            "I want to confirm a booking.",
+            "How do I pay for my rental?",
+            "When will my booking be \napproved?",
+            "Why was my booking \nrejected?",
+            "I want to talk to a live \noperator"
+        ]
+        for i in range(len(option_list)):
+            frame = ctk.CTkFrame(option_frame,bg_color="#D9D9D9",fg_color="white")
+            button = ctk.CTkButton(frame,text=option_list[i],
+            bg_color="#D9D9D9",
+            fg_color="#1572D3",
+            text_color="white",
+            border_color="#1572D3",
+            width=300 / 1536 * self.width,
+            height=116 / 864 * self.height,
+            font=("Poppins Medium", 18/1536*self.width),
+            command= lambda x=option_list[i] : self.add_message("User",x.replace("\n",""))
+            )
+            button.pack()
+            frame.pack(pady=5)
+
+            # Back Button
+            back_button = ctk.CTkButton(
+                self.master, text="Back", bg_color="white", fg_color="#1572D3",
+                text_color="white",
+                border_color="#1572D3", width=89 / 1280 * self.width,
+                height=39 / 720 * self.height, font=("Poppins Medium", 18 / 1536 * self.width),
+                command=self.home_page
+            )
+            back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
+
+    def add_message(self, user, message):
+        frame = ctk.CTkFrame(self.chat_log_frame,width=500,height=40,fg_color="transparent")
+        name_label = ctk.CTkLabel(frame,text=user,
+                                  bg_color="#D9D9D9",text_color="#1572D3",
+                                  font=("Poppins Semibold",24)
+                                  )
+        name_label.place(x=10,y=0)
+        frame.pack(expand=True, fill="x")
+        height = math.ceil(len(message) / 73)
+        message_box = ctk.CTkTextbox(
+            self.chat_log_frame,bg_color="#D9D9D9",text_color="black",fg_color="#D9D9D9",
+            font=("Poppins Medium",18),
+            width=700,height=40*height, wrap="word"
+        )
+        message_box.insert('end',message)
+        message_box.configure(state="disabled")
+        message_box.pack(expand=True,fill="x")
+
+        if user=="User":
+            print(check_response(message, self.user_info["id"]))
+            self.add_message("DriveEase Assistant",check_response(message,self.user_info["id"]))
+            self.master.after(1, self.chat_log_frame._parent_canvas.yview_moveto, 1.0)
+
+        self.master.after(1, self.chat_log_frame._parent_canvas.yview_moveto, 1.0)
+
     def check_verification(self):
         if self.verification_code.get()==self.random_code:
             # Encrypt the password
@@ -392,13 +666,20 @@ class App:
             self.cursor.execute('''
                                         INSERT INTO USERS (USERNAME, EMAIL, USER_PASSWORD, FIRST_NAME, LAST_NAME, DATE_OF_BIRTH)
                                         VALUES (?, ?, ?, ?, ?, ?)
-                                    ''', (self.newUsername.get(), self.newEmail.get(), hashed_password,
+                                    ''', (self.newUsername.get(), self.newEmail.get().strip().lower(), hashed_password,
                                           self.newFirstName.get(), self.newLastName.get(), self.newDOB.get()))
             self.sqliteConnection.commit()
             self.newWindow.destroy()
             self.login()
         else:
             messagebox.showerror("Wrong code","Wrong code: Try again")
+
+    def check_password_token(self):
+        if self.verification_code.get() == self.random_code:
+            self.newWindow.destroy()
+            self.reset_password(True)
+        else:
+            messagebox.showerror("Wrong code", "Wrong code: Try again")
 
     def rental_page(self, option_filter={"capacity": "any", "manufacturer year": "any", "transmission": "any", "price": "any"}):
         for i in self.master.winfo_children():
@@ -535,19 +816,15 @@ class App:
         )
         reset_button.place(x=151/1536*self.width, y=600/864*self.height, anchor="nw")
 
+        # Back Button
         back_button = ctk.CTkButton(
-            self.master,
-            text="Back",
-            bg_color="white",
-            fg_color="#1572D3",
+            self.master, text="Back", bg_color="white", fg_color="#1572D3",
             text_color="white",
-            border_color="#1572D3",
-            width=107/1536*self.width,
-            height=48/864*self.height,
-            font=("Poppins Medium", 18),
+            border_color="#1572D3", width=89 / 1280 * self.width,
+            height=39 / 720 * self.height, font=("Poppins Medium", 18 / 1536 * self.width),
             command=self.home_page
         )
-        back_button.place(x=31/1536*self.width, y=725/864*self.height, anchor="nw")
+        back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
 
         car_frame = ctk.CTkScrollableFrame(
             master=self.master,
@@ -565,37 +842,37 @@ class App:
                 continue
 
             car_slot_frame = ctk.CTkFrame(master=car_frame,bg_color="white",fg_color="white")
-            slot_image = ctk.CTkImage(light_image=img.open('assets/car slot frame.png'),size=(903,248))
+            slot_image = ctk.CTkImage(light_image=img.open('assets/car slot frame.png'),size=(903/1536*self.width,248/864*self.height))
             slot_image_label = ctk.CTkLabel(master=car_slot_frame,image=slot_image, text="")
             slot_image_label.pack()
 
             #car image
             pil_image = img.open("assets/cars/" + car[4])
-            car_image = ctk.CTkImage(light_image=img.open("assets/cars/" + car[4]), size=(272,round(272*pil_image.size[1]/pil_image.size[0])))
+            car_image = ctk.CTkImage(light_image=img.open("assets/cars/" + car[4]), size=(272/1536*self.width,round(272*pil_image.size[1]/pil_image.size[0])/864*self.height))
             car_image_label = ctk.CTkLabel(master=car_slot_frame, image=car_image, text="")
-            car_image_label.place(x=50,y=56,anchor="nw")
+            car_image_label.place(x=50/1536*self.width,y=56/864*self.height,anchor="nw")
             car_slot_frame.pack()
 
             #car name
-            car_name = ctk.CTkLabel(master=car_slot_frame,text=car[2],font=("Poppins Medium",32),text_color="black")
-            car_name.place(x=380,y=20)
+            car_name = ctk.CTkLabel(master=car_slot_frame,text=car[2],font=("Poppins Medium",32/1536*self.width),text_color="black")
+            car_name.place(x=380/1536*self.width,y=20/864*self.height)
             #rating
-            car_rating = ctk.CTkLabel(master=car_slot_frame, text=car[6], font=("Poppins Regular", 20), text_color="black")
-            car_rating.place(x=410, y=70)
+            car_rating = ctk.CTkLabel(master=car_slot_frame, text=car[6], font=("Poppins Regular", 20/1536*self.width), text_color="black")
+            car_rating.place(x=410/1536*self.width, y=70/864*self.height)
             #capacity
-            car_capacity = ctk.CTkLabel(master=car_slot_frame, text=str(car[5])+" Passengers", font=("Poppins Regular", 20),
+            car_capacity = ctk.CTkLabel(master=car_slot_frame, text=str(car[5])+" Passengers", font=("Poppins Regular", 20/1536*self.width),
                                       text_color="#959595")
-            car_capacity.place(x=416, y=120)
+            car_capacity.place(x=416/1536*self.width, y=120/864*self.height)
             # year
             car_manufacturer_year = ctk.CTkLabel(master=car_slot_frame, text=car[1],
-                                        font=("Poppins Regular", 20),
+                                        font=("Poppins Regular", 20/1536*self.width),
                                         text_color="#959595")
-            car_manufacturer_year.place(x=595, y=120)
+            car_manufacturer_year.place(x=595/1536*self.width, y=120/864*self.height)
             # price
             car_price = ctk.CTkLabel(master=car_slot_frame, text="RM"+str(car[3]),
-                                        font=("Poppins Semibold", 18),
+                                        font=("Poppins Semibold", 18/1536*self.width),
                                         text_color="black")
-            car_price.place(x=502, y=171)
+            car_price.place(x=502/1536*self.width, y=171/864*self.height)
             #rent button
             rentButton = ctk.CTkButton(
                 master=car_slot_frame,
@@ -604,13 +881,13 @@ class App:
                 fg_color="#1572D3",
                 text_color="white",
                 border_color="#1572D3",
-                width=137,
-                height=38,
-                font=("Poppins Medium", 14),
+                width=137/1536*self.width,
+                height=38/864*self.height,
+                font=("Poppins Medium", 14/1536*self.width),
                 command=lambda car_deets=car : self.rental_details(car_deets)
             )
 
-            rentButton.place(x=708, y=166, anchor="nw")
+            rentButton.place(x=708/1536*self.width, y=166/864*self.height, anchor="nw")
             i+=1
 
     def set_search_option(self,option):
@@ -719,13 +996,15 @@ class App:
 
         self.email_entry.configure(state="readonly")
 
-        back_btn = ctk.CTkButton(self.master, width=176.7 / 1707 * self.width,
-                                           height=75 / 1067 * self.height, bg_color="white",
-                                           fg_color="#1572D3", text="Back", text_color="white",
-                                           font=("Poppins Light", 24),
-                                            command=self.home_page)
-        back_btn.place(x=81.13 / 1707 * self.width, y=891.25 / 1067 * self.height,
-                       anchor="nw")
+        # Back Button
+        back_button = ctk.CTkButton(
+            self.master, text="Back", bg_color="white", fg_color="#1572D3",
+            text_color="white",
+            border_color="#1572D3", width=89 / 1280 * self.width,
+            height=39 / 720 * self.height, font=("Poppins Medium", 18 / 1536 * self.width),
+            command=self.home_page
+        )
+        back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
 
         edit_btn = ctk.CTkButton(self.master, width=176.7 / 1707 * self.width,
                                            height=75 / 1067 * self.height, bg_color="white",
@@ -816,7 +1095,7 @@ class App:
         capacity_label = ctk.CTkLabel(
             master=self.master,
             text=str(car_array[5])+" Passengers",
-            font=("Poppins Regular",32),
+            font=("Poppins Regular",32/1536*self.width),
             text_color="#959595",
             fg_color="white"
         )
@@ -825,7 +1104,7 @@ class App:
         transmission_label = ctk.CTkLabel(
             master=self.master,
             text=car_array[7],
-            font=("Poppins Regular", 32),
+            font=("Poppins Regular", 32/1536*self.width),
             text_color="#959595",
             fg_color="white"
         )
@@ -834,16 +1113,17 @@ class App:
         manu_year_label = ctk.CTkLabel(
             master=self.master,
             text=car_array[1],
-            font=("Poppins Regular", 32),
+            font=("Poppins Regular", 32/1536*self.width),
             text_color="#959595",
             fg_color="white"
         )
         manu_year_label.place(x=897/1536*self.width, y=222 / 864 * self.height, anchor="nw")
         # price
+        self.car_price = car_array[3]
         price_label = ctk.CTkLabel(
             master=self.master,
             text="$"+str(car_array[3]),
-            font=("Poppins Semibold", round(32/1536*self.width)),
+            font=("Poppins Semibold", 32/1536*self.width),
             text_color="black",
             fg_color="white"
         )
@@ -852,7 +1132,7 @@ class App:
         name_label = ctk.CTkLabel(
             master=self.master,
             text=car_array[2],
-            font=("Poppins Medium", 64),
+            font=("Poppins Medium", 64/1536*self.width),
             text_color="black",
             fg_color="white"
         )
@@ -869,36 +1149,52 @@ class App:
             border_color="white",
             button_color="#D9D9D9",
             text_color="black",
-            font=("Poppins Medium",16),
-            dropdown_font=("Poppins Medium",16),
+            font=("Poppins Medium",16/1536*self.width),
+            dropdown_font=("Poppins Medium",16/1536*self.width),
             variable=self.pickup_location
         )
-        pickup_location_list.place(x=1026/1536*self.width,y=358 / 864 * self.height,anchor="nw")
+        pickup_location_list.place(x=890/1536*self.width,y=370 / 864 * self.height,anchor="nw")
 
         #pick up date
         self.pickup_date = ctk.StringVar()
         self.pickup_date_button = ctk.CTkButton(
             self.master,text="",
             bg_color="white",fg_color="#D9D9D9",hover_color="#B6B6B6",text_color="black",
-            font=("Poppins Medium",16),
+            font=("Poppins Medium",16/1536*self.width),
             anchor="w",
             width=263/1536*self.width,height=41 / 864 * self.height,
             command=lambda : self.set_calendar("create pickup")
         )
-        self.pickup_date_button.place(x=1028/1536*self.width,y=451 / 864 * self.height,anchor="nw")
+        self.pickup_date_button.place(x=890/1536*self.width,y=460 / 864 * self.height,anchor="nw")
 
         # return date
         self.return_date = ctk.StringVar()
         self.return_date_button = ctk.CTkButton(
             self.master, text="",
             bg_color="white", fg_color="#D9D9D9", hover_color="#B6B6B6", text_color="black",
-            font=("Poppins Medium", 16),
+            font=("Poppins Medium", 16/1536*self.width),
             anchor="w",
             width=263/1536*self.width, height=41 / 864 * self.height,
             command=lambda: self.set_calendar("create return")
         )
-        self.return_date_button.place(x=1028/1536*self.width, y=550 / 864 * self.height, anchor="nw")
+        self.return_date_button.place(x=890/1536*self.width, y=560 / 864 * self.height, anchor="nw")
 
+        #duration and total charge calculation
+        self.rent_duration = ctk.IntVar()
+        self.duration_label = ctk.CTkLabel(
+            self.master,text=str(self.rent_duration.get())+" Day"+ ("s" if self.rent_duration.get()!=1 else ""),
+            font=("Poppins Medium",24/1536*self.width),
+            bg_color="white",fg_color="white",text_color="black"
+        )
+        self.duration_label.place(x=1200/1536*self.width, y=358 / 864 * self.height)
+
+        self.rent_charge = ctk.IntVar()
+        self.charge_label = ctk.CTkLabel(
+            self.master, text=f"RM{self.rent_duration.get():.2f}",
+            font=("Poppins Medium", 24/1536*self.width),
+            bg_color="white",fg_color="white",text_color="black"
+        )
+        self.charge_label.place(x=1200 / 1536 * self.width, y=451 / 864 * self.height)
 
         #confirm button
         #what confirm does is different based on whether we are making a new booking
@@ -911,18 +1207,19 @@ class App:
         confirm_btn = ctk.CTkButton(self.master, width=170 / 1536 * self.width,
                                  height=54 / 864 * self.height, bg_color="white",
                                  fg_color="#1572D3", text="Confirm", text_color="white",
-                                 font=("Poppins Light", 24),
+                                 font=("Poppins Light", 24/1536*self.width),
                                  command=confirm_func)
         confirm_btn.place(x=1065 / 1536 * self.width, y=642 / 864 * self.height,
                        anchor="nw")
-        #back button
-        back_btn = ctk.CTkButton(self.master, width=105 / 1536 * self.width,
-                                 height=47 / 864 * self.height, bg_color="white",
-                                 fg_color="#1572D3", text="Back", text_color="white",
-                                 font=("Poppins Light", 24),
-                                 command=self.rental_page if not current else self.current_booking)
-        back_btn.place(x=55 / 1536 * self.width, y=717 / 864 * self.height,
-                       anchor="nw")
+        # Back Button
+        back_button = ctk.CTkButton(
+            self.master, text="Back", bg_color="white", fg_color="#1572D3",
+            text_color="white",
+            border_color="#1572D3", width=89 / 1280 * self.width,
+            height=39 / 720 * self.height, font=("Poppins Medium", 18 / 1536 * self.width),
+            command=self.rental_page
+        )
+        back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
 
     def make_booking(self, car_id):
         self.cursor.execute(f"SELECT * FROM BOOKINGS WHERE USER_ID = {self.user_info["id"]} AND CURRENT_BOOKING = 1")
@@ -1003,7 +1300,7 @@ class App:
                     borderwidth=0, bordercolor='white',
                     font="Poppins 16"
                 )
-                self.pickup_date_calendar.place(x=1300/1536*self.width, y=600/864*self.height, anchor="nw")
+                self.pickup_date_calendar.place(x=1300, y=600, anchor="nw")
             case "create return":
                 self.pickup_date_button.configure(state="disabled")
                 self.current_calendar = "return"
@@ -1013,7 +1310,7 @@ class App:
                     borderwidth=0, bordercolor='white',
                     font="Poppins 16"
                 )
-                self.return_date_calendar.place(x=1300/1536*self.width, y=650/864*self.height, anchor="nw")
+                self.return_date_calendar.place(x=1300, y=650, anchor="nw")
             case "change":
                 if self.current_calendar=="pickup":
                     self.pickup_date_button.configure(text=self.pickup_date_calendar.get_date())
@@ -1025,6 +1322,22 @@ class App:
                     self.return_date.set(self.return_date_calendar.get_date())
                     self.return_date_calendar.destroy()
                     self.pickup_date_button.configure(state="normal")
+
+                if self.pickup_date.get() and self.return_date.get():
+                    if time.strptime(self.pickup_date.get(), "%Y-%m-%d") < time.strptime(
+                            date.today().strftime('%Y-%m-%d'), '%Y-%m-%d'):
+                        messagebox.showerror("Invalid start date", "Your selected start date is invalid.\nTry again.")
+                    elif time.strptime(self.return_date.get(), "%Y-%m-%d") < time.strptime(self.pickup_date.get(),
+                                                                                           "%Y-%m-%d"):
+                        messagebox.showerror("Invalid return date", "Your selected return date is invalid.\nTry again.")
+                    else:# all date details valid, calculate duration and charge
+                        self.rent_duration.set((datetime.strptime(self.return_date.get(),"%Y-%m-%d")-datetime.strptime(self.pickup_date.get(),"%Y-%m-%d")).days+1)
+                        self.rent_charge.set(self.rent_duration.get()*self.car_price)
+
+                        self.duration_label.configure(text=str(self.rent_duration.get())+" Day"+ ("s" if self.rent_duration.get()!=1 else ""))
+                        self.charge_label.configure(text=f"RM{self.rent_charge.get():.2f}")
+
+
 
     def past_rentals(self):
         for i in self.master.winfo_children():
@@ -1041,14 +1354,15 @@ class App:
         )
         rentals_frame.place(x=298/1536*self.width,y=149/864*self.height,anchor="nw")
 
-        #back button
-        back_btn = ctk.CTkButton(self.master, width=105 / 1536 * self.width,
-                                 height=47 / 864 * self.height, bg_color="white",
-                                 fg_color="#1572D3", text="Back", text_color="white",
-                                 font=("Poppins Medium", 24),
-                                 command=self.bookings_page)
-        back_btn.place(x=55 / 1536 * self.width, y=717 / 864 * self.height,
-                       anchor="nw")
+        # Back Button
+        back_button = ctk.CTkButton(
+            self.master, text="Back", bg_color="white", fg_color="#1572D3",
+            text_color="white",
+            border_color="#1572D3", width=89 / 1280 * self.width,
+            height=39 / 720 * self.height, font=("Poppins Medium", 18 / 1536 * self.width),
+            command=self.bookings_page
+        )
+        back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
 
         self.cursor.execute("SELECT * FROM BOOKINGS INNER JOIN CARS ON BOOKINGS.CAR_ID = CARS.CAR_ID")
         booking_list = self.cursor.fetchall()
@@ -1110,19 +1424,19 @@ class App:
             location_label = ctk.CTkLabel(
                 master=slot_frame, text=booking[3],
                 bg_color="white", fg_color="white", text_color="#747474",
-                font=("Poppins Regular", 20)
+                font=("Poppins Regular", 20/1536*self.width)
             )
             location_label.place(x=370/1536*self.width, y=138/864*self.height)
 
             # car name
-            car_name = ctk.CTkLabel(master=slot_frame, text=car[2], font=("Poppins Medium", 32), text_color="black")
+            car_name = ctk.CTkLabel(master=slot_frame, text=car[2], font=("Poppins Medium", 32/1536*self.width), text_color="black")
             car_name.place(x=325/1536*self.width, y=20/864*self.height)
 
             #rating/ratings button
             if booking[9] is None or booking[9]==0:
                 rate_button = ctk.CTkButton(
                     slot_frame,text="Rate",width=105/1536*self.width,height=47/864*self.height,
-                    font=("Poppins Medium",16),
+                    font=("Poppins Medium",16/1536*self.width),
                     bg_color="white",fg_color="#1572D3",text_color="white",
                     command=lambda x = all_details: self.rating_page(x, False)
                 )
@@ -1130,14 +1444,14 @@ class App:
             else:
                 rating_label = ctk.CTkLabel(
                     slot_frame,text=booking[9],
-                    font=("Poppins Medium",64),
+                    font=("Poppins Medium",64/1536*self.width),
                     bg_color="white",fg_color="white",text_color="black"
                 )
                 rating_label.place(x=715/1536*self.width,y=60/864*self.height)
                 view_button = ctk.CTkButton(
                     slot_frame,text="View",
                     bg_color="white",fg_color="#1572D3",text_color="white",
-                    width=105,height=47,font=("Poppins Medium",16),command=lambda x=all_details: self.rating_page(x, True)
+                    width=105,height=47,font=("Poppins Medium",16/1536*self.width),command=lambda x=all_details: self.rating_page(x, True)
                 )
                 view_button.place(x=715/1536*self.width,y=145/864*self.height)
 
@@ -1245,10 +1559,15 @@ class App:
                                        font=("Poppins", 24), command=self.rental_page)
             rent_button.place(x=853 / 1707 * self.width, y=533 / 1067 * self.height, anchor="center")
 
-        bck_btn = ctk.CTkButton(self.master, width=171 / 1707 * self.width, height=69 / 1067 * self.height,
-                                bg_color="white", fg_color="#1572D3", text="Back", text_color="#FFFFFF",
-                                font=("Poppins", 24), command=self.bookings_page)
-        bck_btn.place(x=61 / 1707 * self.width, y=879 / 1067 * self.height, anchor="nw")
+        # Back Button
+        back_button = ctk.CTkButton(
+            self.master, text="Back", bg_color="white", fg_color="#1572D3",
+            text_color="white",
+            border_color="#1572D3", width=89 / 1280 * self.width,
+            height=39 / 720 * self.height, font=("Poppins Medium", 18 / 1536 * self.width),
+            command=self.bookings_page
+        )
+        back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
 
     def prompt_cancel(self, booking_id):
         self.cancel_prompt = ctk.CTkToplevel(self.master)
@@ -1296,7 +1615,7 @@ class App:
             self.master, text="Back", bg_color="white", fg_color="#1572D3",
             text_color="white",
             border_color="#1572D3", width=89 / 1280 * self.width,
-            height=39 / 720 * self.height, font=("Poppins Medium", 18),
+            height=39 / 720 * self.height, font=("Poppins Medium", 18 / 1536 * self.width),
             command=self.home_page
         )
         back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
@@ -1380,15 +1699,13 @@ class App:
         print(all_details)
         booking = all_details[0:10]
         car = all_details[10:18]
-        print(booking)
-        print(car)
         rate_booking_ui = ctk.CTkImage(light_image=img.open("assets/car rating ui.png"),
                                        size=(self.width, self.height - 68))
         rate_booking_ui_label = ctk.CTkLabel(self.master, image=rate_booking_ui, text="")
         rate_booking_ui_label.place(x=0, y=0, anchor="nw")
 
         car_name = ctk.CTkLabel(self.master, fg_color="#FFFFFF", bg_color="#FFFFFF", text=car[2],
-                                text_color="#000000", font=("Poppins", 56))
+                                text_color="#000000", font=("Poppins", 56/1536*self.width))
         car_name.place(x=317 / 1707 * self.width, y=203 / 1067 * self.height, anchor="nw")
 
         car_picture = ctk.CTkImage(light_image=img.open("assets/cars/"+car[4]),
@@ -1417,7 +1734,7 @@ class App:
                                        wrap="word",
                                        scrollbar_button_color="#000000",
                                        text_color="black",
-                                       font=("Poppins Light", 32))
+                                       font=("Poppins Light", 32/1536*self.width))
         self.review_textbox.place(x=1068 / 1707 * self.width, y=306 / 1067 * self.height, anchor="nw")
 
         self.rating_button_list.clear()
@@ -1425,13 +1742,13 @@ class App:
             btn = ctk.CTkButton(self.master, width=79 / 1707 * self.width, height=75 / 1067 * self.height,
                                  command=lambda x=i+1: self.rating_button(x),
                                  bg_color="white", fg_color="#EFBF14", text="☆", text_color="#FFFFFF",
-                                 font=("Poppins", 32))
+                                 font=("Poppins", 32/1536*self.width))
             btn.place(x=(1084+95*i) / 1707 * self.width, y=182 / 1067 * self.height, anchor="nw")
             self.rating_button_list.append(btn)
 
         bck_btn = ctk.CTkButton(self.master, width=171 / 1707 * self.width, height=69 / 1067 * self.height,
                                 bg_color="white", fg_color="#1572D3", text="Back", text_color="white",
-                                font=("Poppins", 24),command=self.past_rentals)
+                                font=("Poppins", 24/1536*self.width),command=self.past_rentals)
         bck_btn.place(x=72 / 1707 * self.width, y=878 / 1067 * self.height, anchor="nw")
 
         if rating_done:
@@ -1553,30 +1870,28 @@ class App:
         past_rentals_ui_label = ctk.CTkLabel(master=self.master, image=past_rentals_ui, text="")
         past_rentals_ui_label.place(relx=0, rely=0, anchor="nw")
 
-        #get performance info
-        # self.cursor.execute("SELECT  FROM BOOKINGS WHERE ")
-        # SELECT
-        # SUM(TOTAL_CHARGE)
-        # FROM
-        # BOOKINGS
-        # INNER
-        # JOIN
-        # PAYMENTS
-        # ON
-        # BOOKINGS.BOOKING_ID = PAYMENTS.BOOKING_ID
-        # WHERE
-        # PAYMENTS.DATE_PAID = '04-11-2024';
-        # today_income = self.cursor.fetchall()
-        today_income = 2200
+        self.cursor.execute(
+            '''SELECT SUM(BOOKINGS.TOTAL_CHARGE) FROM BOOKINGS 
+            INNER JOIN PAYMENTS ON PAYMENTS.BOOKING_ID = BOOKINGS.BOOKING_ID
+            WHERE PAYMENTS.DATE_PAID = DATE('now')'''
+        )
 
+        today_income = self.cursor.fetchone()[0]
         today_income_label = ctk.CTkLabel(
-            self.master,text=f"RM{today_income:.2f}",
+            self.master,text=f"RM{today_income if today_income else 0:.2f}",
             bg_color="white",fg_color="white",text_color="black",
             font=("Poppins Medium",36/1536*self.width)
         )
         today_income_label.place(x=88/1536*self.width,y=240/864*self.height)
 
-        week_income = 2500
+        self.cursor.execute(
+            '''SELECT SUM(BOOKINGS.TOTAL_CHARGE) FROM BOOKINGS 
+                INNER JOIN PAYMENTS ON PAYMENTS.BOOKING_ID = BOOKINGS.BOOKING_ID
+                WHERE DATE(DATE_PAID) <= DATE('now') AND DATE(DATE_PAID) >= DATE('now','-7 day')'''
+        )
+
+        result = self.cursor.fetchone()[0]
+        week_income = 0 if not result else result
         week_income_label = ctk.CTkLabel(
             self.master,text=f"RM{week_income:.2f}",
             bg_color="white",fg_color="white",text_color="#656565",
@@ -1584,7 +1899,8 @@ class App:
         )
         week_income_label.place(x=352/1536*self.width,y=306/864*self.height)
 
-        review_average = 4.65
+        self.cursor.execute("SELECT AVG(SCORE) FROM RATINGS")
+        review_average = self.cursor.fetchone()[0]
         review_average_label = ctk.CTkLabel(
             self.master,text=f"{review_average:.2f}",
             bg_color="white",fg_color="white",text_color="black",
@@ -1592,7 +1908,8 @@ class App:
         )
         review_average_label.place(x=92/1536*self.width,y=520/864*self.height)
 
-        review_count = 10
+        self.cursor.execute("SELECT COUNT(SCORE) FROM RATINGS")
+        review_count = self.cursor.fetchone()[0]
         review_count_label = ctk.CTkLabel(
             self.master, text=f"{review_count}",
             bg_color="white", fg_color="white", text_color="#656565",
@@ -1600,7 +1917,8 @@ class App:
         )
         review_count_label.place(x=457/1536*self.width,y=585/864*self.height)
 
-        user_count = 12
+        self.cursor.execute("SELECT COUNT(USER_ID) FROM USERS")
+        user_count = self.cursor.fetchone()[0]
         user_count_label = ctk.CTkLabel(
             self.master, text=f"{user_count}",
             bg_color="white", fg_color="white", text_color="black",
@@ -1610,15 +1928,17 @@ class App:
         #pie chart
         paid_users = 8
         new_users = 4
+        total = paid_users+new_users
         y = np.array([paid_users,new_users])
         my_colors = ["#1034FF","#10FF68"]
-        plt.pie(y, colors=my_colors,startangle=90)
-        plt.savefig("assets/output1", facecolor='w', bbox_inches="tight", pad_inches=0.3, transparent=True)
+        percentage_labels = [f"{paid_users/total*100:.2f}%",f"{new_users/total*100:.2f}%"]
+        plt.pie(y, colors=my_colors,startangle=90, labels=percentage_labels, textprops={'fontsize': 20})
+        plt.savefig("assets/user_pie_chart", facecolor='w', bbox_inches="tight", pad_inches=0.3, transparent=True)
 
-        pie_chart = ctk.CTkImage(light_image=img.open("assets/output1.png"),
-                                       size=(218/1536*self.width,218/864*self.height))
+        pie_chart = ctk.CTkImage(light_image=img.open("assets/user_pie_chart.png"),
+                                       size=(300/1536*self.width,300*(428/553)/864*self.height))
         pie_chart_label = ctk.CTkLabel(master=self.master, image=pie_chart, text="")
-        pie_chart_label.place(x=625/1536*self.width, y=319/864*self.height, anchor="nw")
+        pie_chart_label.place(x=734/1536*self.width, y=428/864*self.height, anchor="center")
 
         text_list = ["Past Day","Past Week","Past Month","Past Year"]
         for i in range(4):
@@ -1635,15 +1955,247 @@ class App:
                 self.master, text="Back", bg_color="white", fg_color="#1572D3",
                 text_color="white",
                 border_color="#1572D3", width=89 / 1280 * self.width,
-                height=39 / 720 * self.height, font=("Poppins Medium", 18/1536*self.width),
+                height=39 / 720 * self.height, font=("Poppins Medium", 18 / 1536 * self.width),
                 command=self.admin_home
             )
             back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
-
     def print_pdf(self,time_option):
-        print(time_option)
-        c = canvas.Canvas('ex.pdf')
-        c.drawString(100,100,time_option)
+        # Create a PDF canvas object
+        c = canvas.Canvas("Sales Report.pdf", pagesize="A4")
+
+        # Set up font and size
+        c.setFont("Helvetica", 12)
+
+        # Title
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(60, 740, f" Drive Ease Sales Report ({time_option})")
+
+        # Line break
+        c.setFont("Helvetica", 12)
+        y_position = 720
+
+        match time_option:
+            case "Past Day":
+                # List of sections to be printed in the report
+                self.cursor.execute(
+                    '''SELECT SUM(TOTAL_CHARGE) FROM BOOKINGS B 
+                    INNER JOIN PAYMENTS P ON P.BOOKING_ID = B.BOOKING_ID
+                    WHERE DATE(P.DATE_PAID) = DATE('now')
+                    '''
+                )
+                revenue = self.cursor.fetchone()[0]
+                self.cursor.execute(
+                    '''SELECT COUNT(B.BOOKING_ID) FROM BOOKINGS B 
+                    INNER JOIN PAYMENTS P ON P.BOOKING_ID = B.BOOKING_ID
+                    WHERE DATE(P.DATE_PAID) = DATE('now')
+                    '''
+                )
+                rental_count = self.cursor.fetchone()[0]
+                self.cursor.execute(
+                    '''SELECT SUM(TOTAL_CHARGE) FROM BOOKINGS B 
+                    INNER JOIN PAYMENTS P ON P.BOOKING_ID = B.BOOKING_ID
+                    WHERE DATE(P.DATE_PAID) = DATE('now','-1 day')
+                    '''
+                )
+                percent_change = self.cursor.fetchone()[0]
+                percent_change = (revenue-percent_change)/percent_change if percent_change else 0
+
+                self.cursor.execute(
+                    '''SELECT MODEL, IMAGE, MANUFACTURER_YEAR, TRANSMISSION, PRICE, CAPACITY FROM CARS C 
+                    INNER JOIN BOOKINGS B ON C.CAR_ID = B.CAR_ID
+                    GROUP BY MODEL
+                    ORDER BY COUNT(B.CAR_ID)
+                    '''
+                )
+                most_popular = self.cursor.fetchone()
+
+                self.cursor.execute(
+                    '''SELECT AVG(SCORE) FROM RATINGS
+                    WHERE RATING_DATE = DATE('now')
+                    '''
+                )
+                average_rating = self.cursor.fetchone()[0]
+                report_data = {
+                    "Total Revenue:": f"RM{revenue if revenue else 0:.2f}",
+                    "Total Paid Rentals:": f"{rental_count}",
+                    f"Percentage Change in Revenue from {time_option}:": f"{percent_change:.2f}%",
+                    "Average Ratings:": f"{average_rating if average_rating else 0:.1f}/5",
+                    "Most Popular Car:": most_popular[0]
+                }
+            case "Past Week":
+                # List of sections to be printed in the report
+                self.cursor.execute(
+                    '''SELECT SUM(TOTAL_CHARGE) FROM BOOKINGS B 
+                    INNER JOIN PAYMENTS P ON P.BOOKING_ID = B.BOOKING_ID
+                    WHERE DATE(P.DATE_PAID) <= DATE('now') AND DATE(P.DATE_PAID) >= DATE('now','-7 day')
+                    '''
+                )
+                revenue = self.cursor.fetchone()[0]
+                self.cursor.execute(
+                    '''SELECT COUNT(B.BOOKING_ID) FROM BOOKINGS B 
+                    INNER JOIN PAYMENTS P ON P.BOOKING_ID = B.BOOKING_ID
+                    WHERE DATE(P.DATE_PAID) <= DATE('now') AND DATE(P.DATE_PAID) >= DATE('now','-7 day')
+                    '''
+                )
+                rental_count = self.cursor.fetchone()[0]
+                self.cursor.execute(
+                    '''SELECT SUM(TOTAL_CHARGE) FROM BOOKINGS B 
+                    INNER JOIN PAYMENTS P ON P.BOOKING_ID = B.BOOKING_ID
+                    WHERE DATE(P.DATE_PAID) <= DATE('now','-7 day') AND DATE(P.DATE_PAID) >= DATE('now','-14 day')
+                    '''
+                )
+                percent_change = self.cursor.fetchone()[0]
+                percent_change = (revenue - percent_change) / percent_change if percent_change else 0
+
+                self.cursor.execute(
+                    '''SELECT MODEL, IMAGE, MANUFACTURER_YEAR, TRANSMISSION, PRICE, CAPACITY FROM CARS C 
+                    INNER JOIN BOOKINGS B ON C.CAR_ID = B.CAR_ID
+                    GROUP BY MODEL
+                    ORDER BY COUNT(B.CAR_ID)
+                    '''
+                )
+                most_popular = self.cursor.fetchone()
+
+                self.cursor.execute(
+                    '''SELECT AVG(SCORE) FROM RATINGS
+                    WHERE RATING_DATE <= DATE('now') AND DATE(RATING_DATE) >= DATE('now','-7 day')
+                    '''
+                )
+                average_rating = self.cursor.fetchone()[0]
+                report_data = {
+                    "Total Revenue:": f"RM{revenue if revenue else 0:.2f}",
+                    "Total Paid Rentals:": f"{rental_count}",
+                    f"Percentage Change in Revenue from {time_option}:": f"{percent_change:.2f}%",
+                    "Average Ratings:": f"{average_rating if average_rating else 0:.1f}/5",
+                    "Most Popular Car:": most_popular[0]
+                }
+            case "Past Month":
+                # List of sections to be printed in the report
+                self.cursor.execute(
+                    '''SELECT SUM(TOTAL_CHARGE) FROM BOOKINGS B 
+                    INNER JOIN PAYMENTS P ON P.BOOKING_ID = B.BOOKING_ID
+                    WHERE DATE(P.DATE_PAID) <= DATE('now') AND DATE(P.DATE_PAID) >= DATE('now','-1 month')
+                    '''
+                )
+                revenue = self.cursor.fetchone()[0]
+                self.cursor.execute(
+                    '''SELECT COUNT(B.BOOKING_ID) FROM BOOKINGS B 
+                    INNER JOIN PAYMENTS P ON P.BOOKING_ID = B.BOOKING_ID
+                    WHERE DATE(P.DATE_PAID) <= DATE('now') AND DATE(P.DATE_PAID) >= DATE('now','-1 month')
+                    '''
+                )
+                rental_count = self.cursor.fetchone()[0]
+                self.cursor.execute(
+                    '''SELECT SUM(TOTAL_CHARGE) FROM BOOKINGS B 
+                    INNER JOIN PAYMENTS P ON P.BOOKING_ID = B.BOOKING_ID
+                    WHERE DATE(P.DATE_PAID) <= DATE('now','-1 month') AND DATE(P.DATE_PAID) >= DATE('now','-2 month')
+                    '''
+                )
+                percent_change = self.cursor.fetchone()[0]
+                percent_change = (revenue - percent_change) / percent_change if percent_change else 0
+
+                self.cursor.execute(
+                    '''SELECT MODEL, IMAGE, MANUFACTURER_YEAR, TRANSMISSION, PRICE, CAPACITY FROM CARS C 
+                    INNER JOIN BOOKINGS B ON C.CAR_ID = B.CAR_ID
+                    GROUP BY MODEL
+                    ORDER BY COUNT(B.CAR_ID)
+                    '''
+                )
+                most_popular = self.cursor.fetchone()
+
+                self.cursor.execute(
+                    '''SELECT AVG(SCORE) FROM RATINGS
+                    WHERE RATING_DATE <= DATE('now') AND DATE(RATING_DATE) >= DATE('now','-1 month')
+                    '''
+                )
+                average_rating = self.cursor.fetchone()[0]
+                report_data = {
+                    "Total Revenue:": f"RM{revenue if revenue else 0:.2f}",
+                    "Total Paid Rentals:": f"{rental_count}",
+                    f"Percentage Change in Revenue from {time_option}:": f"{percent_change:.2f}%",
+                    "Average Ratings:": f"{average_rating if average_rating else 0:.1f}/5",
+                    "Most Popular Car:": most_popular[0]
+                }
+
+            case "Past Year":
+                # List of sections to be printed in the report
+                self.cursor.execute(
+                    '''SELECT SUM(TOTAL_CHARGE) FROM BOOKINGS B 
+                    INNER JOIN PAYMENTS P ON P.BOOKING_ID = B.BOOKING_ID
+                    WHERE DATE(P.DATE_PAID) <= DATE('now') AND DATE(P.DATE_PAID) >= DATE('now','-1 year')
+                    '''
+                )
+                revenue = self.cursor.fetchone()[0]
+                self.cursor.execute(
+                    '''SELECT COUNT(B.BOOKING_ID) FROM BOOKINGS B 
+                    INNER JOIN PAYMENTS P ON P.BOOKING_ID = B.BOOKING_ID
+                    WHERE DATE(P.DATE_PAID) <= DATE('now') AND DATE(P.DATE_PAID) >= DATE('now','-1 year')
+                    '''
+                )
+                rental_count = self.cursor.fetchone()[0]
+                self.cursor.execute(
+                    '''SELECT SUM(TOTAL_CHARGE) FROM BOOKINGS B 
+                    INNER JOIN PAYMENTS P ON P.BOOKING_ID = B.BOOKING_ID
+                    WHERE DATE(P.DATE_PAID) <= DATE('now','-1 year') AND DATE(P.DATE_PAID) >= DATE('now','-2 year')
+                    '''
+                )
+                percent_change = self.cursor.fetchone()[0]
+                percent_change = (revenue - percent_change) / percent_change if percent_change else 0
+
+                self.cursor.execute(
+                    '''SELECT MODEL, IMAGE, MANUFACTURER_YEAR, TRANSMISSION, PRICE, CAPACITY FROM CARS C 
+                    INNER JOIN BOOKINGS B ON C.CAR_ID = B.CAR_ID
+                    GROUP BY MODEL
+                    ORDER BY COUNT(B.CAR_ID)
+                    '''
+                )
+                most_popular = self.cursor.fetchone()
+
+                self.cursor.execute(
+                    '''SELECT AVG(SCORE) FROM RATINGS
+                    WHERE RATING_DATE <= DATE('now') AND DATE(RATING_DATE) >= DATE('now','-1 year')
+                    '''
+                )
+                average_rating = self.cursor.fetchone()[0]
+                report_data = {
+                    "Total Revenue:": f"RM{revenue if revenue else 0:.2f}",
+                    "Total Paid Rentals:": f"{rental_count}",
+                    f"Percentage Change in Revenue from {time_option}:": f"{percent_change:.2f}%",
+                    "Average Ratings:": f"{average_rating if average_rating else 0:.1f}/5",
+                    "Most Popular Car:": most_popular[0]
+                }
+
+        # Loop through the report data and add it to the PDF
+        for section, value in report_data.items():
+            c.drawString(60, y_position, section)
+            c.drawString(380, y_position, value)
+            y_position -= 20  # Adjust for next line
+
+            # Draw the image of the car (replace 'car_image_path' with the actual path of the car image)
+            y2_position = 500
+            pil_image = img.open(f"assets/cars/{most_popular[1]}")
+            c.drawImage(f"assets/cars/{most_popular[1]}", 100, y2_position, width=200,
+                        height=200 * pil_image.size[1] / pil_image.size[0])  # Adjust width and height as needed
+
+            # Car information (for the single car)
+            car_model = most_popular[0]
+            car_year = most_popular[2]
+            transmission = most_popular[3]
+            car_price = most_popular[4]
+            capacity = most_popular[5]
+
+            # Set the x and y positions for the car info (to the right of the image)
+            car_info_x = 320
+            car_info_y = y2_position + 80  # Start below the image
+
+            # Add car details next to the image
+            c.drawString(car_info_x, car_info_y, f"Car Model: {car_model}")
+            c.drawString(car_info_x, car_info_y - 15, f"Manufacture Year: {car_year}")
+            c.drawString(car_info_x, car_info_y - 30, f"Transmission Type: {transmission}")
+            c.drawString(car_info_x, car_info_y - 45, f"Price: RM{car_price:.2f}")
+            c.drawString(car_info_x, car_info_y - 60, f"Capacity: {capacity} Passengers")
+
+            # Save the PDF file
         c.save()
 
     def manage_cars(self):
@@ -1772,15 +2324,15 @@ class App:
                                  )
         clear_btn.place(x=1299 / 1707 * self.width, y=488 / 1067 * self.height, anchor="nw")
 
-        back_btn = ctk.CTkButton(self.master, width=150 / 1707 * self.width,
-                                 height=58 / 1067 * self.height,
-                                 bg_color="#F0F4FC",
-                                 fg_color="#1572D3",
-                                 text="Back",
-                                 text_color="#FFFFFF",
-                                 font=("Poppins", 24),
-                                 command=self.admin_home)
-        back_btn.place(x=58 / 1707 * self.width, y=908 / 1067 * self.height, anchor="nw")
+        # Back Button
+        back_button = ctk.CTkButton(
+            self.master, text="Back", bg_color="white", fg_color="#1572D3",
+            text_color="white",
+            border_color="#1572D3", width=89 / 1280 * self.width,
+            height=39 / 720 * self.height, font=("Poppins Medium", 18 / 1536 * self.width),
+            command=self.admin_home
+        )
+        back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
 
         style = ttk.Style()
         style.configure("Treeview.Heading", font=("Poppins Medium", 18), rowheight=30, background="#FFFFFF")
@@ -2028,11 +2580,14 @@ class App:
         self.reject_button.place(x=669 / 1280 * self.width, y=328 / 720 * self.height)
 
         # Back Button
-        back_button = ctk.CTkButton(self.master, text="Back", bg_color="white", fg_color="#1572D3", text_color="white",
-                                    border_color="#1572D3", width=87 / 1280 * self.width, height=32 / 588 * self.height,
-                                    font=("Poppins Medium", 18),
-                                 command=self.admin_home)
-        back_button.place(x=46 / 1280 * self.width, y=588 / 720 * self.height)
+        back_button = ctk.CTkButton(
+            self.master, text="Back", bg_color="white", fg_color="#1572D3",
+            text_color="white",
+            border_color="#1572D3", width=89 / 1280 * self.width,
+            height=39 / 720 * self.height, font=("Poppins Medium", 18 / 1536 * self.width),
+            command=self.admin_home
+        )
+        back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
 
         # Treeview
 
@@ -2167,6 +2722,18 @@ class App:
             self.status_entry.delete(0, 'end')
             self.status_entry.insert(0, "Approved")
             self.status_entry.configure(state="disabled")
+
+            msg = EmailMessage()
+            msg.set_content(f"Your booking with DriveEase has been approved by our Administrators!\n Please proceed to the Current Bookings page to make your payment!")
+            msg['Subject'] = 'Your DriveEase Booking Has Been Approved!'
+            msg['From'] = "jeremiahboey@gmail.com"
+            msg['To'] = self.newEmail.get()
+
+            s = smtplib.SMTP('smtp.gmail.com', 587)
+            s.starttls()
+            s.login("jeremiahboey@gmail.com", "kqlv jfry sdet zszi")
+            s.send_message(msg)
+            s.quit()
         else:
             self.cursor.execute("UPDATE BOOKINGS SET STATUS = 'Rejected', CURRENT_BOOKING = 0 WHERE BOOKING_ID = ?", item_values[0])
             messagebox.showinfo("Rejected", "Booking rejected. Rejection email sent")
@@ -2174,6 +2741,23 @@ class App:
             self.status_entry.delete(0, 'end')
             self.status_entry.insert(0, "Rejected")
             self.status_entry.configure(state="disabled")
+
+            msg = EmailMessage()
+            msg.set_content(
+                f'''Your booking with DriveEase has been rejected by our Administrators.\n 
+                This could happen for a variety of reasons. Please send us an inquiry at our email for more info, or make a new booking.\n
+                Thank you for choosing DriveEase.
+'''
+            )
+            msg['Subject'] = 'Your DriveEase Booking Has Been Rejected'
+            msg['From'] = "jeremiahboey@gmail.com"
+            msg['To'] = self.newEmail.get()
+
+            s = smtplib.SMTP('smtp.gmail.com', 587)
+            s.starttls()
+            s.login("jeremiahboey@gmail.com", "kqlv jfry sdet zszi")
+            s.send_message(msg)
+            s.quit()
 
         self.sqliteConnection.commit()
 
