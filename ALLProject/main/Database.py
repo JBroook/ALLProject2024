@@ -1,7 +1,40 @@
 import sqlite3 as sql
 
+import bcrypt
+
 conn = sql.connect("DriveEase.db")
 cursor = conn.cursor()
+
+#user stuff
+cursor.execute(
+    '''
+    CREATE TABLE IF NOT EXISTS USERS (
+        USER_ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        USERNAME VARCHAR(255) NOT NULL,
+        EMAIL VARCHAR(255) NOT NULL,
+        USER_PASSWORD VARCHAR(255) NOT NULL,
+        FIRST_NAME VARCHAR(255) NOT NULL,
+        LAST_NAME VARCHAR(255) NOT NULL,
+        DATE_OF_BIRTH VARCHAR(100) NOT NULL,
+        CONTACT_NUMBER VARCHAR(255) NOT NULL,
+        IC_NUMBER VARCHAR(15) NOT NULL
+    )
+    '''
+)
+
+conn.commit()
+
+#check if admin account exists, if no, create one
+cursor.execute("SELECT * FROM USERS WHERE USERNAME = 'Admin';")
+result = cursor.fetchall()
+if len(result)==0:
+    admin_password = bcrypt.hashpw("Admin@1234".encode(), bcrypt.gensalt())
+    cursor.execute('''
+    INSERT INTO USERS (USERNAME, EMAIL, USER_PASSWORD, FIRST_NAME, LAST_NAME, DATE_OF_BIRTH, CONTACT_NUMBER, IC_NUMBER)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', ("Admin","driveease3@gmail.com",admin_password,"Admin","Account","2000-01-01","",""))
+
+conn.commit()
 
 #car stuff
 cursor.execute(
@@ -16,8 +49,7 @@ cursor.execute(
         CAPACITY INTEGER NOT NULL,
         RATING INTEGER,
         TRANSMISSION VARCHAR(255) NOT NULL,
-        PLATE_NUMBER VARCHAR(10) NOT NULL,
-        RATING_COUNT INTEGER NOT NULL
+        PLATE_NUMBER VARCHAR(10) NOT NULL
     )
     '''
 )

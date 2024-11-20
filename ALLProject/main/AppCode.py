@@ -1,6 +1,5 @@
 import math
 import os
-import pickle
 from tkinter import messagebox, ttk, filedialog
 import sqlite3 as sql
 import matplotlib.pyplot as plt
@@ -10,9 +9,10 @@ from PIL import Image as img
 import re
 import smtplib
 from email.message import EmailMessage
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import string, random
 import pyglet
-from PIL.ImageOps import expand
 from tkcalendar import Calendar
 from reportlab.pdfgen import canvas
 from datetime import date, datetime
@@ -50,7 +50,7 @@ def check_filter_options(dictionary, array):
 
     conn = sql.connect("DriveEase.db")
     cursor = conn.cursor()
-    cursor.execute(f"SELECT CAR_ID FROM BOOKINGS WHERE CAR_ID = {array[0]} AND (STATUS = \'Approved\' OR STATUS = \'Paid\')")
+    cursor.execute(f"SELECT CAR_ID FROM BOOKINGS WHERE CAR_ID = {array[0]} AND CURRENT_BOOKING = 1")
     if cursor.fetchall():
         return False
 
@@ -81,8 +81,17 @@ def check_response(message, user_id):
         case "Why was my booking rejected?":
             return "Your booking can be rejected for a variety of reasons. These include, but are not limited to: Your booking duration was too long, your account reputation is too low, the requested vehicle is not available."
         case "I want to talk to a live operator":
-            return "I understand. Please message the following number (+60102433090) on WhatsApp or email us at [email] for more support"
+            return "I understand. Please message the following number (+60102433090) on WhatsApp or email us at driveease3@gmail.com for more support"
 
+def check_date(test_str, format):
+    res = True
+    # using try-except to check for truth value
+    try:
+        res = bool(datetime.strptime(test_str, format))
+    except ValueError:
+        res = False
+
+    return res
 
 class App:
     def __init__(self, master):
@@ -91,7 +100,7 @@ class App:
         self.selected_car_id = None
         self.image_path = None
         self.master = master
-        self.master.title("Car Rental App")
+        self.master.title("DriveEase")
         self.master.geometry("800x500")
         self.master._state_before_windows_set_titlebar_color = 'zoomed'
         self.width = self.master.winfo_screenwidth()
@@ -105,7 +114,9 @@ class App:
             "last name" : "User",
             "username" : "Unknown",
             "email" : "Unknown",
-            "id" : -1
+            "id" : -1,
+            "contact" : "0",
+            "ic" : "0"
         }
         self.search_options = {
             "capacity": "any",
@@ -120,28 +131,7 @@ class App:
         #database stuff
         self.sqliteConnection = sql.connect("DriveEase.db")
         self.cursor = self.sqliteConnection.cursor()
-        self.cursor.execute('''
-        CREATE TABLE IF NOT EXISTS USERS (
-            USER_ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-            USERNAME VARCHAR(255) NOT NULL,
-            EMAIL VARCHAR(255) NOT NULL,
-            USER_PASSWORD VARCHAR(255) NOT NULL,
-            FIRST_NAME VARCHAR(255) NOT NULL,
-            LAST_NAME VARCHAR(255) NOT NULL,
-            DATE_OF_BIRTH VARCHAR(100) NOT NULL
-        )
-        ''')
-        #check if admin account exists, if no, create one
-        self.cursor.execute("SELECT * FROM USERS WHERE USERNAME = 'Admin';")
-        result = self.cursor.fetchall()
-        if len(result)==0:
-            admin_password = bcrypt.hashpw("Admin@1234".encode(), bcrypt.gensalt())
-            self.cursor.execute('''
-            INSERT INTO USERS (USERNAME, EMAIL, USER_PASSWORD, FIRST_NAME, LAST_NAME, DATE_OF_BIRTH)
-            VALUES (?, ?, ?, ?, ?, ?)
-            ''', ("Admin","jeremiahboey@gmail.com",admin_password,"Admin","Account","2000-01-01"))
 
-        self.sqliteConnection.commit()
         self.master.bind("<KeyRelease>", self.login_enter)
         self.master.bind("<<CalendarSelected>>",lambda x : self.set_calendar("change",x))
         # self.cursor.execute("SELECT * FROM CARS WHERE CAR_ID = 1")
@@ -246,21 +236,28 @@ class App:
             if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', self.recovery_email.get()):
                 messagebox.showerror("Error","Invalid email")
                 return None #break out and close window
-            elif len(self.db_find_email(self.recovery_email.get()))==0:
+            elif len(self.db_find_email(self.recovery_email.get().lower()))==0:
                 messagebox.showerror("Error", "No user with this email found")
                 return None  # break out and close window
 
-            msg = EmailMessage()
+
             self.random_code = ''.join(random.choices(string.ascii_letters, k=6))
-            # print(self.random_code)
-            msg.set_content("Thank you for registering with DriveEase.\nYour verification code is: " + self.random_code)
+
+            msg = MIMEMultipart("alternative")
+            with open("assets/HTML/PasswordResetEmail.html", "r") as file:
+                html_content = file.read().replace("replaceable",self.random_code)
+
+            # msg.set_content("If you did not reset your password, ignore this message.\nYour verification code is: " + self.random_code)
             msg['Subject'] = 'DriveEase Verification Code'
-            msg['From'] = "jeremiahboey@gmail.com"
+            msg['From'] = "driveease3@gmail.com"
             msg['To'] = self.recovery_email.get()
+
+            html_part = MIMEText(html_content, "html")
+            msg.attach(html_part)
 
             s = smtplib.SMTP('smtp.gmail.com', 587)
             s.starttls()
-            s.login("jeremiahboey@gmail.com", "kqlv jfry sdet zszi")
+            s.login("driveease3@gmail.com", "pskq ccbv rqvb jrwf")
             s.send_message(msg)
             s.quit()
 
@@ -395,32 +392,49 @@ class App:
         user_entry = ctk.CTkEntry(self.master, placeholder_text="Alicewonderland", width=215/1536*self.width, height=34/864*self.height,
                                   bg_color="white",
                                   fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",textvariable=self.newUsername)
-        user_entry.place(x=390 / 1280 * self.width, y=194 / 720 * self.height)
+        user_entry.place(x=360 / 1280 * self.width, y=194 / 720 * self.height)
 
         # Password
         self.newPassword = ctk.StringVar()
         password_entry = ctk.CTkEntry(self.master, placeholder_text="******", width=215/1536*self.width, height=34/864*self.height, bg_color="white",
                                       fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",textvariable=self.newPassword,show="*")
-        password_entry.place(x=390 / 1280 * self.width, y=262 / 720 * self.height)
+        password_entry.place(x=360 / 1280 * self.width, y=262 / 720 * self.height)
 
         # Confirm Password
         self.confirmPassword = ctk.StringVar()
         confirm_entry = ctk.CTkEntry(self.master, placeholder_text="******", width=215/1536*self.width, height=34/864*self.height, bg_color="white",
                                      fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",textvariable=self.confirmPassword,show="*")
-        confirm_entry.place(x=390 / 1280 * self.width, y=343 / 720 * self.height)
+        confirm_entry.place(x=360 / 1280 * self.width, y=343 / 720 * self.height)
+
+        # contact no
+        self.newContactNo = ctk.StringVar()
+        contact_no_entry = ctk.CTkEntry(self.master, placeholder_text="+60123456789", width=215 / 1536 * self.width,
+                                  height=34 / 864 * self.height,
+                                  bg_color="white",
+                                  fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",
+                                  textvariable=self.newContactNo)
+        contact_no_entry.place(x=600 / 1280 * self.width, y=194 / 720 * self.height)
+
+        # ic no
+        self.newIcNo = ctk.StringVar()
+        ic_entry = ctk.CTkEntry(self.master, placeholder_text="020304040456", width=215 / 1536 * self.width,
+                                      height=34 / 864 * self.height, bg_color="white",
+                                      fg_color="#D9D9D9", border_color="#D9D9D9", text_color="black",
+                                      textvariable=self.newIcNo)
+        ic_entry.place(x=600 / 1280 * self.width, y=262 / 720 * self.height)
 
         # Login Button
         back_button = ctk.CTkButton(self.master, text="Back to Login", bg_color="white", fg_color="#1572D3",
                                     text_color="white",
                                     border_color="#1572D3", width=135/1536*self.width, height=41/864*self.height, font=("Poppins Medium", 18), command=self.login)
-        back_button.place(x=226 / 1280 * self.width, y=500 / 720 * self.height)
+        back_button.place(x=500 / 1280 * self.width, y=500 / 720 * self.height)
 
         # Confirm Button
         self.confirm_button = ctk.CTkButton(self.master, text="Continue", bg_color="white", fg_color="#1572D3",
                                        text_color="white",
                                        border_color="#1572D3", width=135/1536*self.width, height=41/864*self.height, font=("Poppins Medium", 18),
                                        command=self.confirm_registration)
-        self.confirm_button.place(x=382 / 1280 * self.width, y=500 / 720 * self.height)
+        self.confirm_button.place(x=656 / 1280 * self.width, y=500 / 720 * self.height)
 
     def test_credentials(self):
         query = f"SELECT * FROM USERS WHERE USERNAME = \'{self.username.get()}\';"
@@ -435,6 +449,8 @@ class App:
                     self.user_info["username"] = user[1]
                     self.user_info["email"] = user[2]
                     self.user_info["id"] = user[0]
+                    self.user_info["contact"] = user[7]
+                    self.user_info["ic"] = user[8]
                     self.home_page()
                 else:
                     self.admin_home()
@@ -468,28 +484,39 @@ class App:
             error = "Email is invalid"
         elif len(self.db_find_email(self.newEmail.get().lower())):
             error = "Email already taken"
+        elif not check_date(self.newDOB.get(),"%Y-%m-%d"):
+            error = "Date of birth is invalid"
         elif len(self.newPassword.get())<8:
             error = "Password must be 8 characters minimum"
         elif not any(i.isdigit() for i in self.newPassword.get()):
             error = "Password must contain at least one digit"
         elif self.newPassword.get()!=self.confirmPassword.get():
             error = "Passwords do not match"
+        elif not self.newContactNo.get().replace("+","").isdigit():
+            error = "Invalid contact number"
+        elif not self.newIcNo.get().replace("-","").isdigit() or len(self.newIcNo.get())<10:
+            error = "Invalid IC number"
 
         if error :messagebox.showerror("Error", error)
         else:
             self.confirm_button.configure(state="disabled")
             #send verification code email
-            msg = EmailMessage()
-            self.random_code = ''.join(random.choices(string.ascii_letters,k=6))
+            msg = MIMEMultipart("alternative")
+            self.random_code = ''.join(random.choices(string.ascii_letters, k=6))
+            with open("assets/HTML/VerificationCodeEmail.html", "r") as file:
+                html_content = file.read().replace("replaceable", self.random_code)
+
             # print(self.random_code)
-            msg.set_content("Thank you for registering with DriveEase.\nYour verification code is: "+self.random_code)
             msg['Subject'] = 'DriveEase Verification Code'
-            msg['From'] = "skelliesaintscary@gmail.com"
+            msg['From'] = "driveease3@gmail.com"
             msg['To'] = self.newEmail.get()
+
+            html_part = MIMEText(html_content, "html")
+            msg.attach(html_part)
 
             s = smtplib.SMTP('smtp.gmail.com', 587)
             s.starttls()
-            s.login("jeremiahboey@gmail.com","kqlv jfry sdet zszi")
+            s.login("driveease3@gmail.com","pskq ccbv rqvb jrwf")
             s.send_message(msg)
             s.quit()
 
@@ -658,15 +685,19 @@ class App:
         if self.verification_code.get()==self.random_code:
             # Encrypt the password
             hashed_password = bcrypt.hashpw(self.newPassword.get().encode(), bcrypt.gensalt())
-
             # Store user details with hashed password in the database
             self.cursor.execute('''
-                                        INSERT INTO USERS (USERNAME, EMAIL, USER_PASSWORD, FIRST_NAME, LAST_NAME, DATE_OF_BIRTH)
-                                        VALUES (?, ?, ?, ?, ?, ?)
+                                        INSERT INTO USERS (USERNAME, EMAIL, USER_PASSWORD, FIRST_NAME, LAST_NAME, DATE_OF_BIRTH,
+                                        CONTACT_NUMBER, IC_NUMBER)
+                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                                     ''', (self.newUsername.get(), self.newEmail.get().strip().lower(), hashed_password,
-                                          self.newFirstName.get(), self.newLastName.get(), self.newDOB.get()))
+                                          self.newFirstName.get(), self.newLastName.get(), self.newDOB.get(), self.newContactNo.get().replace("+",""),
+                                          self.newIcNo.get().replace("-","")
+                                          )
+                                )
             self.sqliteConnection.commit()
             self.newWindow.destroy()
+            messagebox.showinfo("Success","Your account was successfully created. Welcome to DriveEase!")
             self.login()
         else:
             messagebox.showerror("Wrong code","Wrong code: Try again")
@@ -834,6 +865,7 @@ class App:
         self.cursor.execute('SELECT * FROM CARS')
         results = self.cursor.fetchall()
         i = 0
+        print("shit",results)
         for car in results:
             if not check_filter_options(option_filter,car):
                 continue
@@ -928,7 +960,7 @@ class App:
             font=("Poppins Regular",36),
             bg_color="white",fg_color="white",text_color="#1572D3"
         )
-        name_label.place(x=300/1536*self.width,y=580/864*self.height,anchor="center")
+        name_label.place(x=300/1536*self.width,y=600/864*self.height,anchor="center")
 
         self.first_name = ctk.StringVar()
         self.first_name.set(self.user_info["first name"])
@@ -993,6 +1025,37 @@ class App:
 
         self.email_entry.configure(state="readonly")
 
+        self.account_contact = ctk.StringVar()
+        self.account_contact.set(self.user_info["contact"])
+        self.contact_entry = ctk.CTkEntry(self.master, width=357.85 / 1707 * self.width,
+                                           height=56.69 / 1067 * self.height,
+                                           bg_color="white",
+                                           fg_color="#D9D9D9",
+                                           border_color="#D9D9D9",
+                                           text_color="black",
+                                           font=("Poppins Light", 24),
+                                           textvariable=self.account_contact
+                                           )
+        self.contact_entry.place(x=1122.44 / 1707 * self.width, y=500.77 / 1067 * self.height,
+                                  anchor="nw")
+        self.contact_entry.configure(state="readonly")
+
+        self.account_ic = ctk.StringVar()
+        self.account_ic.set(self.user_info["ic"])
+        self.ic_entry = ctk.CTkEntry(self.master, width=357.85 / 1707 * self.width,
+                                        height=56.69 / 1067 * self.height,
+                                        bg_color="white",
+                                        fg_color="#D9D9D9",
+                                        border_color="#D9D9D9",
+                                        text_color="black",
+                                        font=("Poppins Light", 24),
+                                        textvariable=self.account_ic
+                                        )
+        self.ic_entry.place(x=1122.44 / 1707 * self.width, y=638.95 / 1067 * self.height,
+                               anchor="nw")
+
+        self.ic_entry.configure(state="readonly")
+
         # Back Button
         back_button = ctk.CTkButton(
             self.master, text="Back", bg_color="white", fg_color="#1572D3",
@@ -1007,7 +1070,7 @@ class App:
                                            height=75 / 1067 * self.height, bg_color="white",
                                            fg_color="#1572D3", text="Edit", text_color="white",
                                            font=("Poppins Light", 24),command=self.enable_edit)
-        edit_btn.place(x=1340 / 1707 * self.width, y=690 / 1067 * self.height, anchor="nw")
+        edit_btn.place(x=1340 / 1707 * self.width, y=725 / 1067 * self.height, anchor="nw")
 
         # Logout Button
         out_button = ctk.CTkButton(self.master, text="Logout", bg_color="white", fg_color="#1572D3",
@@ -1022,18 +1085,21 @@ class App:
         self.first_name_entry.configure(state="normal")
         self.last_name_entry.configure(state="normal")
         self.username_entry.configure(state="normal")
-        self.email_entry.configure(state="normal")
+        self.contact_entry.configure(state="normal")
+        self.ic_entry.configure(state="normal")
 
         self.finish_btn = ctk.CTkButton(self.master, width=176.7 / 1707 * self.width,
                                  height=75 / 1067 * self.height, bg_color="white",
                                  fg_color="#1572D3", text="Done", text_color="white",
                                  font=("Poppins Light", 24), command=self.disable_edit)
-        self.finish_btn.place(x=1150 / 1707 * self.width, y=690 / 1067 * self.height, anchor="nw")
+        self.finish_btn.place(x=1150 / 1707 * self.width, y=725 / 1067 * self.height, anchor="nw")
 
     def disable_edit(self):
         self.user_info["first name"] = self.first_name.get()
         self.user_info["last name"] = self.last_name.get()
         self.user_info["email"] = self.email.get()
+        self.user_info["contact"] = self.account_contact.get()
+        self.user_info["ic"] = self.account_ic.get()
 
         result = self.db_find_user(self.account_username.get())
         username_changed = self.user_info["username"]!=self.account_username.get()
@@ -1055,19 +1121,22 @@ class App:
             self.first_name_entry.configure(state="readonly")
             self.last_name_entry.configure(state="readonly")
             self.username_entry.configure(state="readonly")
-            self.email_entry.configure(state="readonly")
+            self.contact_entry.configure(state="readonly")
+            self.ic_entry.configure(state="readonly")
 
             self.finish_btn.destroy()
             self.cursor.execute(
                 '''
                 UPDATE USERS
-                SET FIRST_NAME = ?, LAST_NAME = ?, USERNAME = ?, EMAIL = ?
-                WHERE USER_ID =  ?;
+                SET FIRST_NAME = ?, LAST_NAME = ?, USERNAME = ?, EMAIL = ?, CONTACT_NUMBER = ?, IC_NUMBER = ?
+                WHERE USER_ID =  ?
                 ''',
                 (self.user_info["first name"],
                  self.user_info["last name"],
                  self.user_info["username"],
                  self.user_info["email"],
+                 self.user_info["contact"],
+                 self.user_info["ic"],
                  self.user_info["id"]
                  ))
             self.sqliteConnection.commit()
@@ -1119,7 +1188,7 @@ class App:
         self.car_price = car_array[3]
         price_label = ctk.CTkLabel(
             master=self.master,
-            text="$"+str(car_array[3]),
+            text=f"RM{car_array[3]}",
             font=("Poppins Semibold", 32/1536*self.width),
             text_color="black",
             fg_color="white"
@@ -1214,7 +1283,7 @@ class App:
             text_color="white",
             border_color="#1572D3", width=89 / 1280 * self.width,
             height=39 / 720 * self.height, font=("Poppins Medium", 18 / 1536 * self.width),
-            command=self.rental_page
+            command=self.rental_page if current==0 else self.current_booking
         )
         back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
 
@@ -1231,9 +1300,9 @@ class App:
         elif len(current_bookings):
             messagebox.showerror("Another booking is active", "You already have an active booking")
         else:
-            days_rented = datetime.strptime(self.return_date.get(), "%Y-%m-%d")-datetime.strptime(self.pickup_date.get(), "%Y-%m-%d")
+            days_rented = datetime.strptime(self.return_date.get(),"%Y-%m-%d")-datetime.strptime(self.pickup_date.get(),"%Y-%m-%d")
             self.cursor.execute(f"SELECT PRICE FROM CARS WHERE CAR_ID = {car_id}")
-            total_charge = self.cursor.fetchone()[0]*days_rented.days
+            total_charge = self.cursor.fetchone()[0]*(days_rented.days+1)
             # print(total_charge)
 
             self.cursor.execute(
@@ -1273,7 +1342,7 @@ class App:
             car_id = self.cursor.fetchone()[0]
             days_rented = datetime.strptime(self.return_date.get(), "%Y-%m-%d") - datetime.strptime(self.pickup_date.get(), "%Y-%m-%d")
             self.cursor.execute(f"SELECT PRICE FROM CARS WHERE CAR_ID = {car_id}")
-            total_charge = self.cursor.fetchone()[0] * days_rented.days
+            total_charge = self.cursor.fetchone()[0] * (days_rented.days+1)
             self.cursor.execute(
                 '''
                 UPDATE BOOKINGS SET 
@@ -1344,12 +1413,6 @@ class App:
         past_rentals_ui_label = ctk.CTkLabel(master=self.master, image=past_rentals_ui, text="")
         past_rentals_ui_label.place(relx=0, rely=0, anchor="nw")
 
-        rentals_frame = ctk.CTkScrollableFrame(
-            self.master,
-            bg_color="white",fg_color="white",
-            width=900/1536*self.width,height=550/864*self.height
-        )
-        rentals_frame.place(x=298/1536*self.width,y=149/864*self.height,anchor="nw")
 
         # Back Button
         back_button = ctk.CTkButton(
@@ -1361,8 +1424,22 @@ class App:
         )
         back_button.place(x=45 / 1280 * self.width, y=588 / 720 * self.height)
 
-        self.cursor.execute("SELECT * FROM BOOKINGS INNER JOIN CARS ON BOOKINGS.CAR_ID = CARS.CAR_ID")
+        self.cursor.execute(f"SELECT * FROM BOOKINGS INNER JOIN CARS ON BOOKINGS.CAR_ID = CARS.CAR_ID WHERE CURRENT_BOOKING = 0 AND STATUS = 'Paid' AND USER_ID = {self.user_info["id"]}")
         booking_list = self.cursor.fetchall()
+        print("shit", booking_list)
+
+        if len(booking_list)==0:
+            ctk.CTkLabel(
+                self.master,text="No completed bookings...",font=("Poppins Semibold",36),
+                text_color="black",bg_color="white",fg_color="white"
+            ).place(x=self.width/2,y=self.height/2,anchor="center")
+        else:
+            rentals_frame = ctk.CTkScrollableFrame(
+                self.master,
+                bg_color="white", fg_color="white",
+                width=900 / 1536 * self.width, height=550 / 864 * self.height
+            )
+            rentals_frame.place(x=298 / 1536 * self.width, y=149 / 864 * self.height, anchor="nw")
 
         for all_details in booking_list:
             print("deets",all_details)
@@ -1677,7 +1754,7 @@ class App:
 
     def confirm_payment(self, booking_id):
         name = self.cardholder_name_entry.get()
-        number = self.number_entry.get().strip()
+        number = self.number_entry.get().strip().replace(" ","")
         expiry_date = self.expiry_entry.get().strip()
         code = self.cvc_entry.get().strip()
         self.cursor.execute(f"SELECT TOTAL_CHARGE FROM BOOKINGS WHERE BOOKING_ID = {booking_id}")
@@ -1693,11 +1770,6 @@ class App:
         elif not code.isdigit() or len(code)!=3:
             messagebox.showerror("Error", "CVC code is invalid")
         else:
-            name = bcrypt.hashpw(name.encode(), bcrypt.gensalt())
-            number = bcrypt.hashpw(number.replace(" ","").encode(), bcrypt.gensalt())
-            expiry_date = bcrypt.hashpw(expiry_date.encode(), bcrypt.gensalt())
-            code = bcrypt.hashpw(code.encode(), bcrypt.gensalt())
-
             self.cursor.execute("INSERT INTO PAYMENTS (NAME, CARD_NUMBER, EXPIRY, CVC, BOOKING_ID, DATE_PAID) "
                       "VALUES (?, ?, ?, ?, ?, ?)", (name, number, expiry_date, code, booking_id, date.today().strftime("%Y-%m-%d")))
             self.cursor.execute(f"UPDATE BOOKINGS SET STATUS = \'Paid\' WHERE BOOKING_ID = {booking_id}")
@@ -1705,17 +1777,21 @@ class App:
             messagebox.showinfo("Success", "Payment successful!")
             self.current_booking()
 
-            msg = EmailMessage()
-            self.random_code = ''.join(random.choices(string.ascii_letters, k=6))
-            # print(self.random_code)
-            msg.set_content(f"Thank you for purchasing with DriveEase!\nYour payment of RM{charge[0]:.2f} has been successfully made under the card ending in {number[len(number)-4:]}")
+            msg = MIMEMultipart("alternative")
+            with open("assets/HTML/PaymentConfirmationEmail.html", "r") as file:
+                html_content = file.read().replace("replaceable1", f"RM{charge[0]:.2f}")
+                html_content = html_content.replace("replaceable2", f"**** {number[len(number)-4:]}")
+
+            html_part = MIMEText(html_content, "html")
+            msg.attach(html_part)
+
             msg['Subject'] = 'DriveEase Verification Code'
-            msg['From'] = "jeremiahboey@gmail.com"
+            msg['From'] = "driveease3@gmail.com"
             msg['To'] = self.user_info["email"]
 
             s = smtplib.SMTP('smtp.gmail.com', 587)
             s.starttls()
-            s.login("jeremiahboey@gmail.com", "kqlv jfry sdet zszi")
+            s.login("driveease3@gmail.com", "pskq ccbv rqvb jrwf")
             s.send_message(msg)
             s.quit()
 
@@ -1811,13 +1887,14 @@ class App:
     def save_rating(self,booking_id):
         self.cursor.execute(
             '''
-            INSERT INTO RATINGS (SCORE, REVIEW, BOOKING_ID)
-            VALUES (?, ?, ?)
+            INSERT INTO RATINGS (SCORE, REVIEW, BOOKING_ID, RATING_DATE)
+            VALUES (?, ?, ?, ?)
             ''',
             (
                 self.rating,
                 self.review_textbox.get(1.0,"end-1c"),
-                booking_id
+                booking_id,
+                datetime.today().strftime("%Y-%m-%d")
             )
         )
         self.sqliteConnection.commit()
@@ -1874,7 +1951,9 @@ class App:
             "last name": "User",
             "username": "Unknown",
             "email": "Unknown",
-            "id": -1
+            "id": -1,
+            "contact" : "",
+            "ic" : ""
         }
         self.search_options = {
             "capacity": "any",
@@ -1926,7 +2005,7 @@ class App:
         self.cursor.execute("SELECT AVG(SCORE) FROM RATINGS")
         review_average = self.cursor.fetchone()[0]
         review_average_label = ctk.CTkLabel(
-            self.master,text=f"{review_average:.2f}",
+            self.master,text=f"{review_average if review_average else 0:.2f}",
             bg_color="white",fg_color="white",text_color="black",
             font=("Poppins Medium",36/1536*self.width)
         )
@@ -1950,9 +2029,10 @@ class App:
         )
         user_count_label.place(x=596/1536*self.width, y=240/864*self.height)
         #pie chart
-        paid_users = 8
-        new_users = 4
-        total = paid_users+new_users
+        self.cursor.execute("SELECT COUNT(DISTINCT USER_ID) FROM BOOKINGS B INNER JOIN PAYMENTS P ON B.BOOKING_ID = P.BOOKING_ID")
+        paid_users = self.cursor.fetchone()[0]
+        new_users = user_count-paid_users
+        total = user_count
         y = np.array([paid_users,new_users])
         my_colors = ["#1034FF","#10FF68"]
         percentage_labels = [f"{paid_users/total*100:.2f}%",f"{new_users/total*100:.2f}%"]
@@ -2221,6 +2301,7 @@ class App:
 
             # Save the PDF file
         c.save()
+        messagebox.showinfo("PDF Generated", "Your Sales Report PDF was successfully generated")
 
     def manage_cars(self):
         for i in self.master.winfo_children():
@@ -2361,11 +2442,11 @@ class App:
         style = ttk.Style()
         style.configure("Treeview.Heading", font=("Poppins Medium", 18), rowheight=30, background="#FFFFFF")
         style.configure("Treeview", font=("Poppins", 16), rowheight=32)
-        self.car_treeview = ttk.Treeview(self.master, columns=(
+        frame = ctk.CTkFrame(self.master)
+        frame.place(x=260/1536*self.width,y=480/864*self.height)
+        self.car_treeview = ttk.Treeview(frame, columns=(
         "ID", "Registration Number", "Manufacturer Year", "Model", "Price", "Capacity", "Transmission"), show="headings")
-        self.car_treeview.place(x=260, y=600,
-                       width=1500,
-                       height=380)
+        self.car_treeview.pack()
         self.car_treeview.bind("<<TreeviewSelect>>", self.select_car)
 
         self.car_treeview.heading("ID", text="ID")
@@ -2619,34 +2700,36 @@ class App:
         style.theme_use("clam")
         style.configure("Treeview.Heading", font=("Poppins Medium", 18), rowheight=100)
         style.configure("Treeview", font=("Poppins", 16), rowheight=32 )
-        self.booking_treeview = ttk.Treeview(self.master, columns=("ID", "Customer Name","Start Date", "End Date", "Model", "Location", "Charge", "Status"),
+        frame = ctk.CTkFrame(self.master)
+        frame.place(x=260 / 1536 * self.width, y=480 / 864 * self.height)
+        self.booking_treeview = ttk.Treeview(frame, columns=("ID", "Customer Name","Start Date", "End Date", "Model", "Location", "Charge", "Status"),
                                 show="headings")
 
         self.booking_treeview.heading("ID", text="ID")
-        self.booking_treeview.column("ID", width=round(8), anchor="center")
+        self.booking_treeview.column("ID", width=80, anchor="center")
 
         self.booking_treeview.heading("Customer Name", text="Customer Name")
-        self.booking_treeview.column("Customer Name", width=round(80), anchor="center")
+        self.booking_treeview.column("Customer Name", width=300, anchor="center")
 
         self.booking_treeview.heading("Model", text="Model")
-        self.booking_treeview.column("Model", width=round(10), anchor="center")
+        self.booking_treeview.column("Model", width=150, anchor="center")
 
         self.booking_treeview.heading("Location", text="Location")
-        self.booking_treeview.column("Location", width=round(10), anchor="center")
+        self.booking_treeview.column("Location", width=200, anchor="center")
 
         self.booking_treeview.heading("Charge", text="Charge")
-        self.booking_treeview.column("Charge", width=round(10), anchor="center")
+        self.booking_treeview.column("Charge", width=150, anchor="center")
 
         self.booking_treeview.heading("Start Date", text="Start Date")
-        self.booking_treeview.column("Start Date", width=round(50), anchor="center")
+        self.booking_treeview.column("Start Date", width=200, anchor="center")
 
         self.booking_treeview.heading("End Date", text="End Date")
-        self.booking_treeview.column("End Date", width=round(50), anchor="center")
+        self.booking_treeview.column("End Date", width=200, anchor="center")
 
         self.booking_treeview.heading("Status", text="Status")
-        self.booking_treeview.column("Status", width=round(20), anchor="center")
+        self.booking_treeview.column("Status", width=150, anchor="center")
 
-        self.booking_treeview.place(x=310, y=578, width=1453, height=365)
+        self.booking_treeview.pack()#place(x=310, y=578, width=1453, height=365)
 
         self.booking_treeview.bind("<<TreeviewSelect>>", self.select_booking)
 
@@ -2711,7 +2794,7 @@ class App:
 
             self.model_entry.configure(state="normal")
             self.model_entry.delete(0, 'end')
-            self.model_entry.insert(0, item_values[7])
+            self.model_entry.insert(0, item_values[4])
             self.model_entry.configure(state="disabled")
 
             self.location_entry.configure(state="normal")
@@ -2739,49 +2822,48 @@ class App:
 
     def confirm_booking(self, mode):
         item_values = self.booking_treeview.item(self.selected_booking, "values")
+        self.status_entry.configure(state="normal")
+        self.status_entry.delete(0, 'end')
+        self.status_entry.configure(state="disabled")
+        msg = MIMEMultipart("alternative")
+
         if mode=="approve":
             self.cursor.execute("UPDATE BOOKINGS SET STATUS = 'Approved' WHERE BOOKING_ID = ?", item_values[0])
             messagebox.showinfo("Approved","Booking approved. Confirmation email sent")
-            self.status_entry.configure(state="normal")
-            self.status_entry.delete(0, 'end')
             self.status_entry.insert(0, "Approved")
-            self.status_entry.configure(state="disabled")
 
-            msg = EmailMessage()
-            msg.set_content(f"Your booking with DriveEase has been approved by our Administrators!\n Please proceed to the Current Bookings page to make your payment!")
             msg['Subject'] = 'Your DriveEase Booking Has Been Approved!'
-            msg['From'] = "jeremiahboey@gmail.com"
-            msg['To'] = self.user_info["email"]
 
-            s = smtplib.SMTP('smtp.gmail.com', 587)
-            s.starttls()
-            s.login("jeremiahboey@gmail.com", "kqlv jfry sdet zszi")
-            s.send_message(msg)
-            s.quit()
+            with open("assets/HTML/BookingApprovalEmail.html", "r") as file:
+                html_content = file.read()
         else:
             self.cursor.execute("UPDATE BOOKINGS SET STATUS = 'Rejected', CURRENT_BOOKING = 0 WHERE BOOKING_ID = ?", item_values[0])
             messagebox.showinfo("Rejected", "Booking rejected. Rejection email sent")
-            self.status_entry.configure(state="normal")
-            self.status_entry.delete(0, 'end')
             self.status_entry.insert(0, "Rejected")
-            self.status_entry.configure(state="disabled")
 
-            msg = EmailMessage()
-            msg.set_content(
-                f'''Your booking with DriveEase has been rejected by our Administrators.\n 
-                This could happen for a variety of reasons. Please send us an inquiry at our email for more info, or make a new booking.\n
-                Thank you for choosing DriveEase.
-'''
-            )
             msg['Subject'] = 'Your DriveEase Booking Has Been Rejected'
-            msg['From'] = "jeremiahboey@gmail.com"
-            msg['To'] = self.newEmail.get()
+            with open("assets/HTML/BookingRejectionEmail.html", "r") as file:
+                html_content = file.read()
 
-            s = smtplib.SMTP('smtp.gmail.com', 587)
-            s.starttls()
-            s.login("jeremiahboey@gmail.com", "kqlv jfry sdet zszi")
-            s.send_message(msg)
-            s.quit()
+        html_content = html_content.replace("car model", item_values[4])
+        html_content = html_content.replace("start date", item_values[2])
+        html_content = html_content.replace("end date", item_values[3])
+
+        html_part = MIMEText(html_content, "html")
+        msg.attach(html_part)
+
+        self.cursor.execute(
+            f"SELECT EMAIL FROM USERS U INNER JOIN BOOKINGS B ON B.USER_ID = U.USER_ID WHERE B.BOOKING_ID = {item_values[0]}")
+        user_email = self.cursor.fetchone()[0]
+
+        msg['From'] = "driveease3@gmail.com"
+        msg['To'] = user_email
+
+        s = smtplib.SMTP('smtp.gmail.com', 587)
+        s.starttls()
+        s.login("driveease3@gmail.com", "pskq ccbv rqvb jrwf")
+        s.send_message(msg)
+        s.quit()
 
         self.sqliteConnection.commit()
 
