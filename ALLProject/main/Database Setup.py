@@ -89,7 +89,7 @@ cursor.execute(
         "2024-11-30",
         "2024-12-05",
         "Pantai Jerejak",
-        5,
+        4,
         3,
         1,
         "Pending",

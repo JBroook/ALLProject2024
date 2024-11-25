@@ -675,7 +675,7 @@ class App:
         message_box.pack(expand=True,fill="x")
 
         if user=="User":
-            print(check_response(message, self.user_info["id"]))
+            # print(check_response(message, self.user_info["id"]))
             self.add_message("DriveEase Assistant",check_response(message,self.user_info["id"]))
             self.master.after(1, self.chat_log_frame._parent_canvas.yview_moveto, 1.0)
 
@@ -865,7 +865,7 @@ class App:
         self.cursor.execute('SELECT * FROM CARS')
         results = self.cursor.fetchall()
         i = 0
-        print("shit",results)
+        # print("shit",results)
         for car in results:
             if not check_filter_options(option_filter,car):
                 continue
@@ -1426,7 +1426,7 @@ class App:
 
         self.cursor.execute(f"SELECT * FROM BOOKINGS INNER JOIN CARS ON BOOKINGS.CAR_ID = CARS.CAR_ID WHERE CURRENT_BOOKING = 0 AND STATUS = 'Paid' AND USER_ID = {self.user_info["id"]}")
         booking_list = self.cursor.fetchall()
-        print("shit", booking_list)
+        # print("shit", booking_list)
 
         if len(booking_list)==0:
             ctk.CTkLabel(
@@ -1442,7 +1442,7 @@ class App:
             rentals_frame.place(x=298 / 1536 * self.width, y=149 / 864 * self.height, anchor="nw")
 
         for all_details in booking_list:
-            print("deets",all_details)
+            # print("deets",all_details)
             if all_details[5]==self.user_info["id"]:
                 if time.strptime(all_details[2],"%Y-%m-%d")<time.strptime(date.today().strftime('%Y-%m-%d'),'%Y-%m-%d') or all_details[6]==0:
                     self.cursor.execute(f"UPDATE BOOKINGS SET CURRENT_BOOKING = 0 WHERE BOOKING_ID = {all_details[0]}")
@@ -1456,7 +1456,7 @@ class App:
             all_details = list(all_details)
             all_details.insert(9,self.cursor.fetchone())
             all_details = tuple(all_details)
-            print(all_details)
+            # print(all_details)
             booking = all_details[0:10]
             car = all_details[10:18]
 
@@ -1796,7 +1796,7 @@ class App:
             s.quit()
 
     def rating_page(self, all_details, rating_done):
-        print(all_details)
+        # print(all_details)
         booking = all_details[0:10]
         car = all_details[10:18]
         rate_booking_ui = ctk.CTkImage(light_image=img.open("assets/car rating ui.png"),
@@ -1882,7 +1882,7 @@ class App:
             else:
                 self.rating_button_list[i].configure(text="☆")
         self.rating = star_selected
-        print(self.rating)
+        # print(self.rating)
 
     def save_rating(self,booking_id):
         self.cursor.execute(
@@ -2467,7 +2467,7 @@ class App:
         #insert all current car values
         self.cursor.execute("SELECT CAR_ID, PLATE_NUMBER, MANUFACTURER_YEAR, MODEL, PRICE, CAPACITY, TRANSMISSION FROM CARS")
         for i in self.cursor.fetchall():
-            print(i)
+            # print(i)
             self.car_treeview.insert("","end",values=i)
 
     def select_car(self, event):
@@ -2743,7 +2743,7 @@ class App:
         )
         for i in self.cursor.fetchall():
             displayed_data = list(i)
-            print(displayed_data)
+            # print(displayed_data)
             self.booking_treeview.insert("", "end", values=displayed_data)
 
     def select_booking(self,event):
