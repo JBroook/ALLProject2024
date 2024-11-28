@@ -34,7 +34,7 @@ _A car rental desktop app developed by first year computer science students._
 - customtkinter
 - tkinter
 - matplotlib
-- piglet
+- pyglet
 - tkcalendar
 - reportlab
 - datetime
